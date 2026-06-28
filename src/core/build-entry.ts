@@ -1,4 +1,4 @@
-import { escapeTypstText } from "../utils/escape-typst";
+import { escapeTypstString } from "../utils/escape-typst";
 
 export type FieldValue = string | boolean | null | undefined;
 
@@ -10,7 +10,7 @@ export function fieldValueToTypst(value: FieldValue): string {
   if (typeof value === "boolean") {
     return value ? "true" : "false";
   }
-  return `"${escapeTypstText(String(value))}"`;
+  return `"${escapeTypstString(String(value))}"`;
 }
 
 /**

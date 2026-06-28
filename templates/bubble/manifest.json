@@ -1,0 +1,24 @@
+{
+  "slug": "bubble",
+  "name": "items.bubble.name",
+  "description": "items.bubble.description",
+  "version": "0.1.0",
+  "engine": {
+    "kind": "typst-package",
+    "package": "@preview/bubble:0.2.2",
+    "entry": "template.typ"
+  },
+  "category": "lecture",
+  "tags": ["colorful", "cover", "lecture"],
+  "fonts": ["Source Sans Pro", "Barlow"],
+  "headingOffset": 0,
+  "fields": [
+    { "key": "title", "label": "fields.title", "type": "text", "scope": "metadata", "required": true, "default": "Untitled" },
+    { "key": "subtitle", "label": "fields.subtitle", "type": "text", "scope": "metadata", "required": false },
+    { "key": "author", "label": "fields.author", "type": "text", "scope": "metadata", "required": false },
+    { "key": "affiliation", "label": "fields.affiliation", "type": "text", "scope": "metadata", "required": false },
+    { "key": "year", "label": "fields.year", "type": "text", "scope": "metadata", "required": false },
+    { "key": "courseName", "label": "fields.courseName", "type": "text", "scope": "metadata", "required": false },
+    { "key": "mainColor", "label": "fields.mainColor", "type": "text", "scope": "option", "required": false, "default": "#E94845" }
+  ]
+}

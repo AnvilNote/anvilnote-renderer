@@ -1,0 +1,26 @@
+{
+  "slug": "hetvid",
+  "name": "items.hetvid.name",
+  "description": "items.hetvid.description",
+  "version": "0.1.0",
+  "engine": {
+    "kind": "typst-package",
+    "package": "@preview/hetvid:0.2.1",
+    "entry": "template.typ"
+  },
+  "category": "academic",
+  "tags": ["academic", "cjk", "abstract"],
+  "fonts": ["New Computer Modern", "Noto Serif CJK TC", "DejaVu Sans Mono"],
+  "headingOffset": 0,
+  "fields": [
+    { "key": "title", "label": "fields.title", "type": "text", "scope": "metadata", "required": true, "default": "Untitled" },
+    { "key": "author", "label": "fields.author", "type": "text", "scope": "metadata", "required": false },
+    { "key": "affiliation", "label": "fields.affiliation", "type": "text", "scope": "metadata", "required": false },
+    { "key": "abstract", "label": "fields.abstract", "type": "textarea", "scope": "metadata", "required": false },
+    { "key": "date", "label": "fields.date", "type": "date", "scope": "metadata", "required": false, "default": "today" },
+    { "key": "version", "label": "fields.version", "type": "text", "scope": "metadata", "required": false },
+    { "key": "toc", "label": "fields.toc", "type": "boolean", "scope": "option", "required": false, "default": true },
+    { "key": "paperSize", "label": "fields.paperSize", "type": "select", "scope": "option", "required": false, "default": "a4", "options": ["a4", "letter"] },
+    { "key": "lang", "label": "fields.lang", "type": "select", "scope": "option", "required": false, "default": "en", "options": ["en", "zh"] }
+  ]
+}
