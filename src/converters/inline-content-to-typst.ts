@@ -3,11 +3,22 @@ import { escapeTypstText } from "../utils/escape-typst";
 type InlineNode = {
   text?: unknown;
   href?: unknown;
+  content?: unknown;
   styles?: Record<string, unknown>;
   type?: unknown;
 };
 
 function renderInlineNode(node: InlineNode): string {
+  // BlockNote links are nested: { type: "link", href, content: [styledText…] }.
+  // Render the inner inline content and wrap it in a Typst link.
+  if (node.type === "link" && typeof node.href === "string" && node.href) {
+    const inner = inlineContentToTypst(node.content);
+    if (!inner) {
+      return "";
+    }
+    return `#link("${escapeTypstText(node.href)}")[${inner}]`;
+  }
+
   const text = escapeTypstText(String(node.text ?? ""));
   if (!text) {
     return "";

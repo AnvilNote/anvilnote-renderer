@@ -1,3 +1,5 @@
+export type RenderFieldValue = string | boolean | null;
+
 export type RenderInput = {
   document: {
     id: string;
@@ -5,13 +7,13 @@ export type RenderInput = {
     content: unknown[];
   };
   template: {
-    id: string;
-    fields?: Record<string, string | boolean | null>;
+    slug: string;
+    meta: Record<string, RenderFieldValue>;
+    options: Record<string, RenderFieldValue>;
   };
   options?: {
     format?: "pdf";
     pageSize?: "A4" | "Letter";
-    fontPreset?: "sans" | "serif" | "mono";
     includeMetadata?: boolean;
   };
 };

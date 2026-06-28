@@ -9,12 +9,32 @@ dotenv.config({ quiet: true });
 
 const typstBin = process.env.TYPST_BIN || "typst";
 
-export async function compileTypst(inputPath: string, outputPath: string) {
+export type CompileTypstOptions = {
+  /** Directories passed as `--font-path` so bundled fonts resolve. */
+  fontPaths?: string[];
+  /** Project root passed as `--root` so adapter-local imports resolve. */
+  root?: string;
+};
+
+export async function compileTypst(
+  inputPath: string,
+  outputPath: string,
+  options: CompileTypstOptions = {},
+) {
   await ensureDir(path.dirname(outputPath));
   await fs.rm(outputPath, { force: true });
 
+  const args = ["compile"];
+  if (options.root) {
+    args.push("--root", options.root);
+  }
+  for (const fontPath of options.fontPaths ?? []) {
+    args.push("--font-path", fontPath);
+  }
+  args.push(inputPath, outputPath);
+
   return new Promise<{ ok: true; logs: string[] } | RenderFailureResult>((resolve) => {
-    const child = spawn(typstBin, ["compile", inputPath, outputPath], {
+    const child = spawn(typstBin, args, {
       stdio: ["ignore", "pipe", "pipe"],
     });
 
