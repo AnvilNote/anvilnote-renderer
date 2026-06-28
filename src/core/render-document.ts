@@ -5,6 +5,7 @@ import { renderInputSchema } from "../schemas/render-input.schema";
 import type { RenderInput } from "../types/render-input";
 import type { RenderResult } from "../types/render-result";
 import { blocknoteToTypst } from "../converters/blocknote-to-typst";
+import { ensureMathLoaded } from "../converters/latex-to-typst";
 import { loadTemplate } from "./template-loader";
 import { ensureDir } from "../utils/fs";
 import { compileTypst } from "./compile-typst";
@@ -24,6 +25,7 @@ export async function renderDocument(
   await ensureDir(workDir);
 
   const template = await loadTemplate(input.template.slug);
+  await ensureMathLoaded();
   const body = blocknoteToTypst(input.document.content, {
     headingOffset: template.manifest.headingOffset,
   });

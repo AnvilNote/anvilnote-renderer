@@ -1,14 +1,40 @@
-import { escapeTypstText } from "../utils/escape-typst";
+import { escapeTypstString, escapeTypstText } from "../utils/escape-typst";
+import { latexToTypstMath } from "./latex-to-typst";
 
 type InlineNode = {
   text?: unknown;
   href?: unknown;
   content?: unknown;
+  props?: Record<string, unknown>;
   styles?: Record<string, unknown>;
   type?: unknown;
 };
 
+function inlineLatex(node: InlineNode): string {
+  const props = node.props ?? {};
+  for (const key of ["formula", "latex", "equation", "value"]) {
+    const value = props[key];
+    if (typeof value === "string" && value.trim()) {
+      return value;
+    }
+  }
+  return typeof node.text === "string" ? node.text : "";
+}
+
 function renderInlineNode(node: InlineNode): string {
+  // Inline math: { type: "inlineMath", props: { formula: "<LaTeX>" } }.
+  // No surrounding spaces so Typst keeps it inline within the text.
+  if (node.type === "inlineMath" || node.type === "math") {
+    const latex = inlineLatex(node);
+    if (!latex.trim()) {
+      return "";
+    }
+    // No surrounding spaces keeps it inline. On conversion failure, degrade to
+    // the raw source so one bad formula can't break the render.
+    const { typst, ok } = latexToTypstMath(latex);
+    return ok ? `$${typst}$` : `#raw("${escapeTypstString(latex)}")`;
+  }
+
   // BlockNote links are nested: { type: "link", href, content: [styledText…] }.
   // Render the inner inline content and wrap it in a Typst link.
   if (node.type === "link" && typeof node.href === "string" && node.href) {

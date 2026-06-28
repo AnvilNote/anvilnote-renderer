@@ -11,6 +11,9 @@ importers:
       dotenv:
         specifier: ^17.4.2
         version: 17.4.2
+      tex2typst:
+        specifier: ^0.6.2
+        version: 0.6.2
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -565,6 +568,9 @@ packages:
     resolution: {integrity: sha512-7++dFhtcx3353uBaq8DDR4NuxBetBzC7ZQOhmTQInHEd6bSrXdiEyzCvG07Z44UYdLShWUyXt5M/yhz8ekcb1A==}
     engines: {node: '>=8'}
 
+  tex2typst@0.6.2:
+    resolution: {integrity: sha512-KQwpKUZ3kWI/cBEChFhVPJJV5/61R2Eb0epL6AGlQTKdto4OZer9wX4F2mbTsThVJPeLP4Ax0CkUk23IdcgnGQ==}
+
   tinyglobby@0.2.17:
     resolution: {integrity: sha512-wXR/dYpcqKmfWpEdZjiKJOwCNFndD0DMnrW/cYjVGttEkBfVgcLFHoNrlj47mjOVic9yyNu65alsgF4NQyTa2g==}
     engines: {node: '>=12.0.0'}
@@ -1080,6 +1086,8 @@ snapshots:
       shebang-regex: 3.0.0
 
   shebang-regex@3.0.0: {}
+
+  tex2typst@0.6.2: {}
 
   tinyglobby@0.2.17:
     dependencies:
