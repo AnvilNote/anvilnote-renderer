@@ -12,13 +12,23 @@ function normalizeHeadingLevel(props: Record<string, unknown> | undefined) {
   return typeof level === "number" && level >= 1 && level <= 6 ? level : 1;
 }
 
-function renderBlock(block: BlockNode): string {
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
+
+type BlocknoteToTypstOptions = {
+  /** Shifts every heading level so templates whose visible structure starts
+   *  below H1 (e.g. plain-note from `==`) line up. Clamped to 1..6. */
+  headingOffset?: number;
+};
+
+function renderBlock(block: BlockNode, headingOffset: number): string {
   const type = typeof block.type === "string" ? block.type : "paragraph";
   const text = inlineContentToTypst(block.content);
 
   switch (type) {
     case "heading": {
-      const level = normalizeHeadingLevel(block.props);
+      const level = clamp(normalizeHeadingLevel(block.props) + headingOffset, 1, 6);
       return `${"=".repeat(level)} ${text}`.trim();
     }
     case "bulletListItem":
@@ -38,9 +48,10 @@ function renderBlock(block: BlockNode): string {
   }
 }
 
-export function blocknoteToTypst(blocks: unknown[]) {
+export function blocknoteToTypst(blocks: unknown[], opts: BlocknoteToTypstOptions = {}) {
+  const headingOffset = opts.headingOffset ?? 0;
   return blocks
-    .map((block) => renderBlock((block ?? {}) as BlockNode))
+    .map((block) => renderBlock((block ?? {}) as BlockNode, headingOffset))
     .filter(Boolean)
     .flatMap((block) => [block, ""])
     .join("\n")

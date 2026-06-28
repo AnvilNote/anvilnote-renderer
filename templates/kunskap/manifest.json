@@ -1,0 +1,56 @@
+{
+  "slug": "kunskap",
+  "name": "items.kunskap.name",
+  "description": "items.kunskap.description",
+  "version": "0.1.0",
+  "engine": {
+    "kind": "typst-package",
+    "package": "@preview/kunskap:0.1.0",
+    "entry": "template.typ"
+  },
+  "category": "report",
+  "tags": ["clean", "report", "a4"],
+  "fonts": ["Noto Serif", "Source Sans Pro", "Hack"],
+  "headingOffset": 0,
+  "fields": [
+    {
+      "key": "title",
+      "label": "fields.title",
+      "type": "text",
+      "scope": "metadata",
+      "required": true,
+      "default": "Untitled"
+    },
+    {
+      "key": "author",
+      "label": "fields.author",
+      "type": "text",
+      "scope": "metadata",
+      "required": false
+    },
+    {
+      "key": "date",
+      "label": "fields.date",
+      "type": "date",
+      "scope": "metadata",
+      "required": false,
+      "default": "today"
+    },
+    {
+      "key": "courseName",
+      "label": "fields.courseName",
+      "type": "text",
+      "scope": "metadata",
+      "required": false
+    },
+    {
+      "key": "paperSize",
+      "label": "fields.paperSize",
+      "type": "select",
+      "scope": "option",
+      "required": false,
+      "default": "a4",
+      "options": ["a4", "letter"]
+    }
+  ]
+}

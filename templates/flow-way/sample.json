@@ -1,0 +1,188 @@
+{
+  "document": {
+    "id": "sample-flow-way",
+    "title": "機器學習報告",
+    "content": [
+      {
+        "type": "heading",
+        "props": {
+          "level": 1
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "研究背景與動機",
+            "styles": {}
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "這份文件展示模板的排版能力：標題層級、段落、清單、連結與中英混排。內容由 ",
+            "styles": {}
+          },
+          {
+            "type": "text",
+            "text": "BlockNote",
+            "styles": {
+              "code": true
+            }
+          },
+          {
+            "type": "text",
+            "text": " 編輯器提供，模板只負責版型。",
+            "styles": {}
+          }
+        ]
+      },
+      {
+        "type": "heading",
+        "props": {
+          "level": 2
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "研究問題",
+            "styles": {}
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "本研究聚焦於下列幾個面向：",
+            "styles": {}
+          }
+        ]
+      },
+      {
+        "type": "bulletListItem",
+        "content": [
+          {
+            "type": "text",
+            "text": "模板與內容的解耦",
+            "styles": {}
+          }
+        ]
+      },
+      {
+        "type": "bulletListItem",
+        "content": [
+          {
+            "type": "text",
+            "text": "欄位 schema 驅動的動態表單",
+            "styles": {}
+          }
+        ]
+      },
+      {
+        "type": "bulletListItem",
+        "content": [
+          {
+            "type": "text",
+            "text": "同一份文件套用不同版型",
+            "styles": {}
+          }
+        ]
+      },
+      {
+        "type": "heading",
+        "props": {
+          "level": 2
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "方法與連結",
+            "styles": {}
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "我們使用 ",
+            "styles": {}
+          },
+          {
+            "type": "text",
+            "text": "Typst",
+            "styles": {
+              "bold": true
+            }
+          },
+          {
+            "type": "text",
+            "text": " 作為排版引擎，詳見 ",
+            "styles": {}
+          },
+          {
+            "type": "link",
+            "href": "https://typst.app/docs/",
+            "content": [
+              {
+                "type": "text",
+                "text": "官方文件",
+                "styles": {}
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": "。",
+            "styles": {}
+          }
+        ]
+      },
+      {
+        "type": "heading",
+        "props": {
+          "level": 3
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "小結",
+            "styles": {}
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "The architecture cleanly separates document content from template styling.",
+            "styles": {}
+          }
+        ]
+      }
+    ]
+  },
+  "template": {
+    "slug": "flow-way",
+    "meta": {
+      "title": "機器學習報告",
+      "subtitle": "期末專題",
+      "author": "林大偉",
+      "affiliation": "東北大學",
+      "year": "2026"
+    },
+    "options": {
+      "toc": true,
+      "tocDepth": "3"
+    }
+  },
+  "options": {
+    "format": "pdf",
+    "pageSize": "A4"
+  }
+}

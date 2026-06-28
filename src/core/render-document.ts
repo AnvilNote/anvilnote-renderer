@@ -8,33 +8,10 @@ import { blocknoteToTypst } from "../converters/blocknote-to-typst";
 import { loadTemplate } from "./template-loader";
 import { ensureDir } from "../utils/fs";
 import { compileTypst } from "./compile-typst";
-import { escapeTypstText } from "../utils/escape-typst";
+import { buildTypstEntry } from "./build-entry";
 
 function pagePreset(pageSize?: "A4" | "Letter") {
   return pageSize === "Letter" ? "us-letter" : "a4";
-}
-
-function fontPreset(font?: "sans" | "serif" | "mono") {
-  switch (font) {
-    case "sans":
-      return "TeX Gyre Heros";
-    case "mono":
-      return "New Computer Modern Mono";
-    default:
-      return "New Computer Modern";
-  }
-}
-
-function fieldValueLiteral(value: string | boolean | null | undefined) {
-  if (value === null || value === undefined || value === "") {
-    return "none";
-  }
-
-  if (typeof value === "boolean") {
-    return value ? "true" : "false";
-  }
-
-  return `"${escapeTypstText(String(value))}"`;
 }
 
 export async function renderDocument(
@@ -46,44 +23,61 @@ export async function renderDocument(
   await ensureDir(outputDir);
   await ensureDir(workDir);
 
-  const template = await loadTemplate(input.template.id);
-  const bodyContent = blocknoteToTypst(input.document.content);
+  const template = await loadTemplate(input.template.slug);
+  const body = blocknoteToTypst(input.document.content, {
+    headingOffset: template.manifest.headingOffset,
+  });
+
   const fileStem = `${input.document.id}-${randomUUID()}`;
-  const typstPath = path.join(workDir, `${fileStem}.typ`);
   const pdfPath = path.join(outputDir, `${fileStem}.pdf`);
-  const templateImportPath = path.join(workDir, `${fileStem}-template.typ`);
 
-  await fs.copyFile(template.templatePath, templateImportPath);
+  // D3-A: compile with the template directory as `--root` so the adapter's
+  // local imports (upstream.typ, fonts) and `@preview/*` resolve naturally.
+  // The entry file lives in a per-render subdir under the template's `.work/`
+  // (must be inside root), and is cleaned up afterwards. A durable copy of the
+  // generated source is written to the caller's workDir for retention/debug.
+  const buildDir = path.join(template.dir, ".work", fileStem);
+  await ensureDir(buildDir);
+  const entryPath = path.join(buildDir, "entry.typ");
+  const durableTypstPath = path.join(workDir, `${fileStem}.typ`);
 
-  const typstSource = [
-    `#import "${path.basename(templateImportPath)}": anvil-note`,
-    ``,
-    `#set page(paper: "${pagePreset(input.options?.pageSize)}", margin: (x: 22mm, y: 24mm))`,
-    `#set text(font: "${fontPreset(input.options?.fontPreset)}", size: 11pt)`,
-    ``,
-    `#anvil-note(`,
-    `  title: ${fieldValueLiteral(input.template.fields?.title ?? input.document.title)},`,
-    `  author: ${fieldValueLiteral(input.template.fields?.author)},`,
-    `  date: ${fieldValueLiteral(input.template.fields?.date)},`,
-    `  [`,
-    bodyContent,
-    `  ],`,
-    `)`,
-    ``,
-  ].join("\n");
+  const adapterRelPath = path
+    .relative(buildDir, template.adapterPath)
+    .split(path.sep)
+    .join("/");
 
-  await fs.writeFile(typstPath, typstSource, "utf8");
+  const entrySource = buildTypstEntry({
+    adapterRelPath,
+    meta: input.template.meta,
+    options: input.template.options,
+    body,
+    pagePreset: pagePreset(input.options?.pageSize),
+  });
 
-  const compileResult = await compileTypst(typstPath, pdfPath);
-  if (!compileResult.ok) {
-    return compileResult;
+  await fs.writeFile(entryPath, entrySource, "utf8");
+
+  try {
+    const compileResult = await compileTypst(entryPath, pdfPath, {
+      fontPaths: template.fontPaths,
+      root: template.dir,
+    });
+
+    if (!compileResult.ok) {
+      return compileResult;
+    }
+
+    // Persist the generated source where the API's retention sweep can manage
+    // it, keeping the in-repo .work/ dir transient.
+    await fs.copyFile(entryPath, durableTypstPath).catch(() => undefined);
+
+    return {
+      ok: true,
+      status: "COMPLETED",
+      typstPath: durableTypstPath,
+      pdfPath,
+      logs: compileResult.logs,
+    };
+  } finally {
+    await fs.rm(buildDir, { recursive: true, force: true });
   }
-
-  return {
-    ok: true,
-    status: "COMPLETED",
-    typstPath,
-    pdfPath,
-    logs: compileResult.logs,
-  };
 }

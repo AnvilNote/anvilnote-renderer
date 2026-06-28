@@ -1,0 +1,24 @@
+{
+  "slug": "flow-way",
+  "name": "items.flow-way.name",
+  "description": "items.flow-way.description",
+  "version": "0.1.0",
+  "engine": {
+    "kind": "typst-package",
+    "package": "@preview/flow-way:0.2.0",
+    "entry": "template.typ"
+  },
+  "category": "report",
+  "tags": ["report", "cover", "toc"],
+  "fonts": ["Source Sans Pro", "Barlow", "CMU Typewriter Text"],
+  "headingOffset": 0,
+  "fields": [
+    { "key": "title", "label": "fields.title", "type": "text", "scope": "metadata", "required": true, "default": "Untitled" },
+    { "key": "subtitle", "label": "fields.subtitle", "type": "text", "scope": "metadata", "required": false },
+    { "key": "author", "label": "fields.author", "type": "text", "scope": "metadata", "required": false },
+    { "key": "affiliation", "label": "fields.affiliation", "type": "text", "scope": "metadata", "required": false },
+    { "key": "year", "label": "fields.year", "type": "text", "scope": "metadata", "required": false },
+    { "key": "toc", "label": "fields.toc", "type": "boolean", "scope": "option", "required": false, "default": true },
+    { "key": "tocDepth", "label": "fields.tocDepth", "type": "select", "scope": "option", "required": false, "default": "3", "options": ["1", "2", "3"] }
+  ]
+}

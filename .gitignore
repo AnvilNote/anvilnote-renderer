@@ -3,3 +3,6 @@ dist
 .env
 *.log
 tmp
+
+# Transient per-render build dirs created inside template folders.
+templates/*/.work/
