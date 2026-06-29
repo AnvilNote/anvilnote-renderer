@@ -5,6 +5,11 @@ import { renderInputSchema } from "../schemas/render-input.schema";
 import type { RenderInput } from "../types/render-input";
 import type { RenderResult } from "../types/render-result";
 import { blocknoteToTypst } from "../converters/blocknote-to-typst";
+import {
+  isTiptapContent,
+  tiptapToTypst,
+  type ImageAsset,
+} from "../converters/tiptap-to-typst";
 import { ensureMathLoaded } from "../converters/latex-to-typst";
 import { loadTemplate } from "./template-loader";
 import { ensureDir } from "../utils/fs";
@@ -26,9 +31,18 @@ export async function renderDocument(
 
   const template = await loadTemplate(input.template.slug);
   await ensureMathLoaded();
-  const body = blocknoteToTypst(input.document.content, {
-    headingOffset: template.manifest.headingOffset,
-  });
+  // anvilnote-web now stores Tiptap JSON (wrapped as [{ type: "doc", … }]).
+  // Legacy BlockNote documents (a flat block array) still convert via the old
+  // path so previously stored notes keep rendering.
+  const images: ImageAsset[] = [];
+  const body = isTiptapContent(input.document.content)
+    ? tiptapToTypst(input.document.content, {
+        headingOffset: template.manifest.headingOffset,
+        images,
+      })
+    : blocknoteToTypst(input.document.content, {
+        headingOffset: template.manifest.headingOffset,
+      });
 
   const fileStem = `${input.document.id}-${randomUUID()}`;
   const pdfPath = path.join(outputDir, `${fileStem}.pdf`);
@@ -40,6 +54,18 @@ export async function renderDocument(
   // generated source is written to the caller's workDir for retention/debug.
   const buildDir = path.join(template.dir, ".work", fileStem);
   await ensureDir(buildDir);
+
+  // Write decoded inline images next to the entry so Typst's image("…")
+  // (resolved relative to the entry file) finds them.
+  await Promise.all(
+    images.map((asset) =>
+      fs.writeFile(
+        path.join(buildDir, asset.filename),
+        Buffer.from(asset.base64, "base64"),
+      ),
+    ),
+  );
+
   const entryPath = path.join(buildDir, "entry.typ");
   const durableTypstPath = path.join(workDir, `${fileStem}.typ`);
 
