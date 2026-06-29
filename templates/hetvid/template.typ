@@ -5,7 +5,7 @@
 
 #let _s(v) = if v == none { "" } else { v }
 
-#let anvil-template(meta: (:), options: (:), body) = {
+#let anvil-template(meta: (:), options: (:), fonts: (:), body) = {
   show: hetvid.with(
     title: [#meta.at("title", default: "Untitled")],
     author: _s(meta.at("author", default: "")),

@@ -5,7 +5,7 @@
 
 #let _s(v) = if v == none { "" } else { v }
 
-#let anvil-template(meta: (:), options: (:), body) = {
+#let anvil-template(meta: (:), options: (:), fonts: (:), body) = {
   let author = meta.at("author", default: none)
   let authors = if author == none or author == "" { () } else { (author,) }
 

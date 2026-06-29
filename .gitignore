@@ -6,3 +6,6 @@ tmp
 
 # Transient per-render build dirs created inside template folders.
 templates/*/.work/
+
+# Generated sample render artifacts (the .typ / .json inputs are committed).
+samples/*.pdf

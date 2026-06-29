@@ -62,6 +62,11 @@
   rule-color: rgb("#d1d5db"),
   callout-fill: rgb("#f5f5f4"),
   callout-stroke: rgb("#d6d3d1"),
+  // Fallback faces for scripts that are neither Latin nor Chinese (Japanese
+  // kana, Korean hangul, Thai…). Headings reach for a sans family, body text
+  // for a serif family, so the title/body contrast is kept across languages.
+  sans-langs: ("Noto Sans JP", "Noto Sans KR", "Noto Sans Thai", "Noto Sans"),
+  serif-langs: ("Noto Serif JP", "Noto Serif KR", "Noto Serif Thai", "Noto Serif"),
 ) = (
   title-font: title-font,
   title-fallback-font: title-fallback-font,
@@ -92,6 +97,8 @@
   rule-color: rule-color,
   callout-fill: callout-fill,
   callout-stroke: callout-stroke,
+  sans-langs: sans-langs,
+  serif-langs: serif-langs,
 )
 
 // Merges user configuration into the default plain-note configuration.
@@ -169,7 +176,7 @@
 
   if title != none {
     align(center, text(
-      font: (cfg.title-font, cfg.title-fallback-font),
+      font: (cfg.title-font, cfg.title-fallback-font) + cfg.sans-langs,
       fallback: true,
       fill: cfg.text-color,
       size: cfg.title-size,
@@ -180,7 +187,7 @@
   if author != none {
     v(0.9em)
     align(center, text(
-      font: (cfg.body-font, cfg.cjk-font),
+      font: (cfg.body-font, cfg.cjk-font) + cfg.serif-langs,
       fallback: true,
       fill: cfg.text-color,
       size: cfg.body-size,
@@ -191,7 +198,7 @@
   if date != none {
     v(0.3em)
     align(center, text(
-      font: (cfg.body-font, cfg.cjk-font),
+      font: (cfg.body-font, cfg.cjk-font) + cfg.serif-langs,
       fallback: true,
       fill: cfg.text-color,
       size: cfg.body-size,
@@ -383,8 +390,7 @@
     font: (
       cfg.body-font,
       cfg.cjk-font,
-      cfg.code-font,
-    ),
+    ) + cfg.serif-langs + (cfg.code-font,),
     fallback: true,
     fill: cfg.text-color,
     size: cfg.body-size,
@@ -419,7 +425,7 @@
     context {
       let nums = counter(heading).at(it.location())
       block(text(
-        font: (cfg.heading-2-font, cfg.heading-2-cjk-font),
+        font: (cfg.heading-2-font, cfg.heading-2-cjk-font) + cfg.sans-langs,
         fallback: true,
         fill: cfg.text-color,
         size: size,
@@ -454,7 +460,7 @@
           link(hd.location(), {
             h((hd.level - 2) * 1.4em)
             text(
-              font: (cfg.heading-2-font, cfg.heading-2-cjk-font),
+              font: (cfg.heading-2-font, cfg.heading-2-cjk-font) + cfg.sans-langs,
               [#numbering(_heading-numbering, ..nums)#h(0.5em)#hd.body],
             )
             box(width: 1fr, inset: (x: 0.4em), repeat[.])

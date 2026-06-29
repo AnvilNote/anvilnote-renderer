@@ -13,7 +13,7 @@
 // rgb() rejects a leading "#", so strip it before parsing the hex string.
 #let _hex(v) = if v == none or v == "" { none } else if v.starts-with("#") { v.slice(1) } else { v }
 
-#let anvil-template(meta: (:), options: (:), body) = {
+#let anvil-template(meta: (:), options: (:), fonts: (:), body) = {
   let name = meta.at("author", default: none)
   let aff = meta.at("affiliation", default: none)
   let authors = if name == none or name == "" { () } else { (([#name], [#aff]),) }

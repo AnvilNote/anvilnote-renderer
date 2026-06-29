@@ -1,4 +1,7 @@
 import { escapeTypstString } from "../utils/escape-typst";
+import type { FontChoices } from "../config/fonts";
+
+export type { FontChoices };
 
 export type FieldValue = string | boolean | null | undefined;
 
@@ -40,6 +43,12 @@ export function dictToTypst(dict: Record<string, FieldValue>): string {
 export type BuildTypstEntryInput = {
   /** Adapter import path relative to the entry file (e.g. "../../template.typ"). */
   adapterRelPath: string;
+  /** anvil-fonts.typ import path relative to the entry file. */
+  sharedFontsRelPath: string;
+  /** Whether the renderer should wrap the template with apply-anvil-fonts. */
+  usesAnvilFontWrapper?: boolean;
+  /** Resolved, validated font choices. */
+  fonts: FontChoices;
   meta: Record<string, FieldValue>;
   options: Record<string, FieldValue>;
   body: string;
@@ -48,12 +57,12 @@ export type BuildTypstEntryInput = {
 };
 
 // Code-block styling shared by every template: Typst's native `raw`
-// highlighting (theme: auto) plus a monospace stack and a light framed block.
-// Line numbers / custom themes (Codly, Zebraw, .tmTheme) are intentionally out
-// of scope for now.
+// highlighting (theme: auto) plus a light framed block. The monospace font
+// stack is owned by the AnvilNote font wrapper (anvil-fonts.typ), not here, so
+// the font policy stays in one place. Line numbers / custom themes (Codly,
+// Zebraw, .tmTheme) are intentionally out of scope for now.
 const RAW_BLOCK_STYLE = [
   `#set raw(theme: auto, tab-size: 2)`,
-  `#show raw: set text(font: ("JetBrains Mono", "Noto Sans Mono", "Latin Modern Mono"), size: 0.88em)`,
   `#show raw.where(block: true): block.with(`,
   `  fill: rgb("#F7F7F8"),`,
   `  stroke: rgb("#E5E7EB"),`,
@@ -69,7 +78,11 @@ const RAW_BLOCK_STYLE = [
  * translate that into the underlying package's real API.
  */
 export function buildTypstEntry(input: BuildTypstEntryInput): string {
+  const f = input.fonts;
+  const usesAnvilFontWrapper = input.usesAnvilFontWrapper ?? true;
+
   const lines = [
+    `#import "${input.sharedFontsRelPath}": ${usesAnvilFontWrapper ? "apply-anvil-fonts, " : ""}anvil-font-stacks`,
     `#import "${input.adapterRelPath}": anvil-template`,
     ``,
   ];
@@ -78,12 +91,41 @@ export function buildTypstEntry(input: BuildTypstEntryInput): string {
     lines.push(`#set page(paper: "${input.pagePreset}")`, ``);
   }
 
+  // Resolve every role stack once from the user's scalar choices. The same dict
+  // drives the universal body wrapper AND is handed to the template so its own
+  // title / author / date chrome uses the matching stacks.
+  lines.push(
+    `#let _stacks = anvil-font-stacks(`,
+    `  primary-lang: "${f.primaryLang}",`,
+    `  title-face: "${f.titleFace}",`,
+    `  body-face: "${f.bodyFace}",`,
+    `  date-face: "${f.dateFace}",`,
+    `  math-face: "${f.mathFace}",`,
+    `)`,
+    ``,
+  );
+
+  // Order matters. `#show: A` then `#show: B` then C composes as A(B(C)), so a
+  // rule declared LATER nests deeper. The template (often a third-party
+  // @preview package) sets its own fonts inside its show rule; to make the
+  // AnvilNote font policy WIN for the document body, apply-anvil-fonts must nest
+  // INSIDE the template — i.e. be declared AFTER it. The template owns layout
+  // and draws its title/author/date chrome from the `fonts` dict; everything in
+  // `body` (paragraphs, headings, code, math) is forced onto the chosen stacks.
   lines.push(
     `#show: anvil-template.with(`,
     `  meta: ${dictToTypst(input.meta)},`,
     `  options: ${dictToTypst(input.options)},`,
+    `  fonts: _stacks,`,
     `)`,
     ``,
+  );
+
+  if (usesAnvilFontWrapper) {
+    lines.push(`#show: apply-anvil-fonts.with(stacks: _stacks)`, ``);
+  }
+
+  lines.push(
     RAW_BLOCK_STYLE,
     ``,
     input.body,

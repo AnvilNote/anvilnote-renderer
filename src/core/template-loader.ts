@@ -2,6 +2,7 @@ import path from "node:path";
 import { promises as fs } from "node:fs";
 import { z } from "zod";
 import { resolveFromRendererRoot } from "../utils/path";
+import { getFontDir } from "./font-paths";
 import type { LoadedTemplate, TemplateManifest } from "../types/template";
 
 const templateFieldSchema = z.object({
@@ -29,6 +30,10 @@ const templateManifestSchema = z.object({
   tags: z.array(z.string()).default([]),
   fonts: z.array(z.string()).default([]),
   headingOffset: z.number().int().default(0),
+  // Font policy is AnvilNote-controlled via the renderer wrapper; these record
+  // that contract. Older manifests default to the enforced policy.
+  usesAnvilFontWrapper: z.boolean().default(true),
+  fontPolicy: z.literal("anvil-controlled").default("anvil-controlled"),
   fields: z.array(templateFieldSchema),
 });
 
@@ -53,7 +58,7 @@ export async function loadTemplate(slug: string): Promise<LoadedTemplate> {
   // Font search paths: shared renderer pool + this template's local fonts.
   // Only existing directories are included so Typst never gets a dead path.
   const candidateFontDirs = [
-    resolveFromRendererRoot("fonts"),
+    getFontDir(),
     path.join(templateDir, "fonts"),
   ];
   const fontPaths: string[] = [];

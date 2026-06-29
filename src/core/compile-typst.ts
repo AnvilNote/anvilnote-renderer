@@ -14,6 +14,8 @@ export type CompileTypstOptions = {
   fontPaths?: string[];
   /** Project root passed as `--root` so adapter-local imports resolve. */
   root?: string;
+  /** Pass `--ignore-system-fonts` so renders only use the bundled fonts. */
+  ignoreSystemFonts?: boolean;
 };
 
 export async function compileTypst(
@@ -30,6 +32,9 @@ export async function compileTypst(
   }
   for (const fontPath of options.fontPaths ?? []) {
     args.push("--font-path", fontPath);
+  }
+  if (options.ignoreSystemFonts) {
+    args.push("--ignore-system-fonts");
   }
   args.push(inputPath, outputPath);
 

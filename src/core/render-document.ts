@@ -15,6 +15,9 @@ import { loadTemplate } from "./template-loader";
 import { ensureDir } from "../utils/fs";
 import { compileTypst } from "./compile-typst";
 import { buildTypstEntry } from "./build-entry";
+import { shouldIgnoreSystemFonts } from "./font-paths";
+import { resolveFromRendererRoot } from "../utils/path";
+import { FONT_PRESET_VERSION, FONT_BUNDLE, resolveFontChoices } from "../config/fonts";
 
 function pagePreset(pageSize?: "A4" | "Letter") {
   return pageSize === "Letter" ? "us-letter" : "a4";
@@ -74,8 +77,24 @@ export async function renderDocument(
     .split(path.sep)
     .join("/");
 
+  // Typst restricts file access to within `--root` (= template.dir), so the
+  // shared font policy file (templates/shared/anvil-fonts.typ) is copied next
+  // to the entry and imported as "./anvil-fonts.typ".
+  const sharedFontsSrc = resolveFromRendererRoot(
+    "templates",
+    "shared",
+    "anvil-fonts.typ",
+  );
+  await fs.copyFile(sharedFontsSrc, path.join(buildDir, "anvil-fonts.typ"));
+
+  // Resolve user font choices (primary language + per-role faces + math mode).
+  const fonts = resolveFontChoices(input.template.options);
+
   const entrySource = buildTypstEntry({
     adapterRelPath,
+    sharedFontsRelPath: "./anvil-fonts.typ",
+    usesAnvilFontWrapper: template.manifest.usesAnvilFontWrapper,
+    fonts,
     meta: input.template.meta,
     options: input.template.options,
     body,
@@ -88,6 +107,7 @@ export async function renderDocument(
     const compileResult = await compileTypst(entryPath, pdfPath, {
       fontPaths: template.fontPaths,
       root: template.dir,
+      ignoreSystemFonts: shouldIgnoreSystemFonts(),
     });
 
     if (!compileResult.ok) {
@@ -104,6 +124,15 @@ export async function renderDocument(
       typstPath: durableTypstPath,
       pdfPath,
       logs: compileResult.logs,
+      fontConfig: {
+        fontPresetVersion: FONT_PRESET_VERSION,
+        fontBundle: FONT_BUNDLE,
+        mathMode: fonts.mathFace,
+        primaryLang: fonts.primaryLang,
+        titleFace: fonts.titleFace,
+        bodyFace: fonts.bodyFace,
+        dateFace: fonts.dateFace,
+      },
     };
   } finally {
     await fs.rm(buildDir, { recursive: true, force: true });

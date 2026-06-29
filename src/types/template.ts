@@ -35,6 +35,10 @@ export type TemplateManifest = {
   fonts: string[];
   /** BlockNote H1 → Typst heading level offset. plain-note = 1, others = 0. */
   headingOffset: number;
+  /** Whether the renderer wraps this template with apply-anvil-fonts. */
+  usesAnvilFontWrapper: boolean;
+  /** Font ownership contract; always AnvilNote-controlled. */
+  fontPolicy: "anvil-controlled";
   fields: TemplateField[];
 };
 
