@@ -29,10 +29,11 @@
   // Title uses the rounded cwTeX Q Yuan face, with Roboto for any Latin glyphs.
   title-font: "cwTeX Q Yuan",
   title-fallback-font: "Roboto",
-  // Body: Latin Modern Roman (Computer Modern) with a Ming serif for CJK.
-  body-font: "Latin Modern Roman",
+  // Body: New Computer Modern (the maintained Computer Modern / Latin Modern
+  // successor that ships in the renderer font pool) with a Ming serif for CJK.
+  body-font: "New Computer Modern",
   cjk-font: "cwTeX Q Ming",
-  code-font: "Latin Modern Mono",
+  code-font: "CMU Typewriter Text",
   // Headings: Roboto (regular) with cwTeX Q Yuan for CJK.
   heading-2-font: "Roboto",
   heading-2-cjk-font: "cwTeX Q Yuan",
