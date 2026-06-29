@@ -1,0 +1,194 @@
+{
+  "version": "0.1.0",
+  "fonts": [
+    {
+      "key": "moe-kai",
+      "label": "教育部標準楷書",
+      "family": "TW-MOE-Std-Kai",
+      "category": "zh-kai",
+      "license": "CC BY-ND",
+      "source": "MOE",
+      "path": "fonts/zh/moe-kai"
+    },
+    {
+      "key": "moe-song",
+      "label": "教育部標準宋體",
+      "family": "TW-MOE-Std-Song",
+      "category": "zh-serif",
+      "license": "CC BY-ND",
+      "source": "MOE",
+      "path": "fonts/zh/moe-song"
+    },
+    {
+      "key": "source-han-sans-tw",
+      "label": "思源黑體 TW",
+      "family": "思源黑體 TW",
+      "category": "zh-sans",
+      "license": "OFL-1.1",
+      "source": "Adobe Source Han Sans",
+      "path": "fonts/zh/source-han-sans-tw"
+    },
+    {
+      "key": "taiwan-pearl",
+      "label": "台灣圓體",
+      "family": "TaiwanPearl",
+      "category": "zh-rounded",
+      "license": "OFL-1.1",
+      "source": "TaiwanPearl",
+      "path": "fonts/zh/taiwan-pearl"
+    },
+    {
+      "key": "tinos",
+      "label": "Tinos",
+      "family": "Tinos",
+      "category": "latin-serif",
+      "license": "Apache-2.0",
+      "source": "Google Fonts",
+      "path": "fonts/latin/tinos"
+    },
+    {
+      "key": "noto-sans",
+      "label": "Noto Sans",
+      "family": "Noto Sans",
+      "category": "latin-sans",
+      "license": "OFL-1.1",
+      "source": "Google Fonts",
+      "path": "fonts/latin/noto-sans"
+    },
+    {
+      "key": "noto-serif",
+      "label": "Noto Serif",
+      "family": "Noto Serif",
+      "category": "latin-serif",
+      "license": "OFL-1.1",
+      "source": "Google Fonts",
+      "path": "fonts/latin/noto-serif"
+    },
+    {
+      "key": "roboto",
+      "label": "Roboto",
+      "family": "Roboto",
+      "category": "number-sans",
+      "license": "Apache-2.0",
+      "source": "Google Fonts",
+      "path": "fonts/latin/roboto"
+    },
+    {
+      "key": "noto-serif-jp",
+      "label": "Noto Serif JP",
+      "family": "Noto Serif JP",
+      "category": "ja-serif",
+      "license": "OFL-1.1",
+      "source": "Google Fonts",
+      "path": "fonts/cjk/noto-serif-jp"
+    },
+    {
+      "key": "noto-sans-jp",
+      "label": "Noto Sans JP",
+      "family": "Noto Sans JP",
+      "category": "ja-sans",
+      "license": "OFL-1.1",
+      "source": "Google Fonts",
+      "path": "fonts/cjk/noto-sans-jp"
+    },
+    {
+      "key": "noto-serif-kr",
+      "label": "Noto Serif KR",
+      "family": "Noto Serif KR",
+      "category": "ko-serif",
+      "license": "OFL-1.1",
+      "source": "Google Fonts",
+      "path": "fonts/cjk/noto-serif-kr"
+    },
+    {
+      "key": "noto-sans-kr",
+      "label": "Noto Sans KR",
+      "family": "Noto Sans KR",
+      "category": "ko-sans",
+      "license": "OFL-1.1",
+      "source": "Google Fonts",
+      "path": "fonts/cjk/noto-sans-kr"
+    },
+    {
+      "key": "noto-serif-thai",
+      "label": "Noto Serif Thai",
+      "family": "Noto Serif Thai",
+      "category": "th-serif",
+      "license": "OFL-1.1",
+      "source": "Google Fonts",
+      "path": "fonts/thai/noto-serif-thai"
+    },
+    {
+      "key": "noto-sans-thai",
+      "label": "Noto Sans Thai",
+      "family": "Noto Sans Thai",
+      "category": "th-sans",
+      "license": "OFL-1.1",
+      "source": "Google Fonts",
+      "path": "fonts/thai/noto-sans-thai"
+    },
+    {
+      "key": "jetbrains-mono",
+      "label": "JetBrains Mono",
+      "family": "JetBrains Mono",
+      "category": "mono",
+      "license": "OFL-1.1",
+      "source": "JetBrains",
+      "path": "fonts/mono/jetbrains-mono"
+    },
+    {
+      "key": "noto-sans-mono",
+      "label": "Noto Sans Mono",
+      "family": "Noto Sans Mono",
+      "category": "mono",
+      "license": "OFL-1.1",
+      "source": "Google Fonts",
+      "path": "fonts/mono/noto-sans-mono"
+    },
+    {
+      "key": "new-computer-modern-math",
+      "label": "New Computer Modern Math",
+      "family": "New Computer Modern Math",
+      "category": "math",
+      "license": "GUST Font License / OFL-compatible",
+      "source": "New Computer Modern",
+      "path": "fonts/math/new-computer-modern"
+    },
+    {
+      "key": "eb-garamond",
+      "label": "EB Garamond",
+      "family": "EB Garamond",
+      "category": "latin-serif",
+      "license": "OFL-1.1",
+      "source": "Google Fonts",
+      "path": "fonts/latin/eb-garamond"
+    },
+    {
+      "key": "garamond-math",
+      "label": "Garamond-Math",
+      "family": "Garamond-Math",
+      "category": "math",
+      "license": "OFL-1.1",
+      "source": "Garamond-Math",
+      "path": "fonts/math/garamond-math"
+    },
+    {
+      "key": "playfair-display",
+      "label": "Playfair Display",
+      "family": "Playfair Display",
+      "category": "date-serif",
+      "license": "OFL-1.1",
+      "source": "Google Fonts",
+      "path": "fonts/latin/playfair-display"
+    },
+    {
+      "key": "tai-heritage-pro",
+      "label": "Tai Heritage Pro",
+      "family": "Tai Heritage Pro",
+      "category": "date-serif",
+      "license": "OFL-1.1",
+      "source": "Google Fonts",
+      "path": "fonts/latin/tai-heritage-pro"
+    }
+  ]
+}

@@ -2,15 +2,23 @@
   "slug": "kunskap",
   "name": "items.kunskap.name",
   "description": "items.kunskap.description",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "engine": {
     "kind": "typst-package",
     "package": "@preview/kunskap:0.1.0",
     "entry": "template.typ"
   },
   "category": "report",
-  "tags": ["clean", "report", "a4"],
-  "fonts": ["Noto Serif", "Source Sans Pro", "Hack"],
+  "tags": [
+    "clean",
+    "report",
+    "a4"
+  ],
+  "fonts": [
+    "Noto Serif",
+    "Source Sans Pro",
+    "Hack"
+  ],
   "headingOffset": 0,
   "fields": [
     {
@@ -50,7 +58,75 @@
       "scope": "option",
       "required": false,
       "default": "a4",
-      "options": ["a4", "letter"]
+      "options": [
+        "a4",
+        "letter"
+      ]
+    },
+    {
+      "key": "mathMode",
+      "label": "fields.mathMode",
+      "type": "select",
+      "scope": "option",
+      "required": false,
+      "default": "default",
+      "options": [
+        "default",
+        "garamond"
+      ]
+    },
+    {
+      "key": "primaryLang",
+      "label": "fields.primaryLang",
+      "type": "select",
+      "scope": "option",
+      "required": false,
+      "default": "zh",
+      "options": [
+        "zh",
+        "en",
+        "ja",
+        "ko",
+        "th"
+      ]
+    },
+    {
+      "key": "titleFont",
+      "label": "fields.titleFont",
+      "type": "select",
+      "scope": "option",
+      "required": false,
+      "default": "taiwan-pearl",
+      "options": [
+        "taiwan-pearl",
+        "source-han"
+      ]
+    },
+    {
+      "key": "bodyFont",
+      "label": "fields.bodyFont",
+      "type": "select",
+      "scope": "option",
+      "required": false,
+      "default": "song",
+      "options": [
+        "song",
+        "kai"
+      ]
+    },
+    {
+      "key": "dateFont",
+      "label": "fields.dateFont",
+      "type": "select",
+      "scope": "option",
+      "required": false,
+      "default": "playfair",
+      "options": [
+        "playfair",
+        "tai-heritage"
+      ]
     }
-  ]
+  ],
+  "usesAnvilFontWrapper": true,
+  "fontPolicy": "anvil-controlled"
 }

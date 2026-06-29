@@ -7,7 +7,7 @@
 // bubble feeds main-color straight into rgb(), which rejects a leading "#".
 #let _hex(v) = { let s = _s(v); if s.starts-with("#") { s.slice(1) } else { s } }
 
-#let anvil-template(meta: (:), options: (:), body) = {
+#let anvil-template(meta: (:), options: (:), fonts: (:), body) = {
   show: bubble.with(
     title: _s(meta.at("title", default: "Untitled")),
     subtitle: _s(meta.at("subtitle", default: "")),

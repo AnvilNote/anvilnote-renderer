@@ -2,13 +2,17 @@
   "slug": "plain-note",
   "name": "items.plain-note.name",
   "description": "items.plain-note.description",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "engine": {
     "kind": "local",
     "entry": "template.typ"
   },
   "category": "note",
-  "tags": ["clean", "cjk", "a4"],
+  "tags": [
+    "clean",
+    "cjk",
+    "a4"
+  ],
   "fonts": [
     "Latin Modern Roman",
     "Latin Modern Mono",
@@ -59,5 +63,7 @@
       "required": false,
       "default": true
     }
-  ]
+  ],
+  "usesAnvilFontWrapper": false,
+  "fontPolicy": "anvil-controlled"
 }

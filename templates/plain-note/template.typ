@@ -1,11 +1,10 @@
 // plain-note adapter.
 //
-// Translates AnvilNote's normalized (meta, options) dicts into the local
-// plain-note package API. The renderer recognizes only the unified contract
-// `anvil-template(meta, options, body)`; all package-specific shape lives here.
+// plain-note ships as a self-contained template package. The renderer only
+// feeds it metadata and a small set of behavior toggles.
 #import "upstream.typ": plain-note, hypersetup
 
-#let anvil-template(meta: (:), options: (:), body) = {
+#let anvil-template(meta: (:), options: (:), fonts: (:), body) = {
   show: hypersetup.with(
     colorlinks: options.at("colorlinks", default: true),
     pdftitle: meta.at("title", default: none),

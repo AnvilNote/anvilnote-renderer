@@ -26,7 +26,43 @@ pnpm build
 
 ```env
 TYPST_BIN=typst
+ANVILNOTE_FONT_DIR=./fonts          # bundled fonts (Docker: /app/fonts)
+ANVILNOTE_IGNORE_SYSTEM_FONTS=true  # only use the bundle, never system fonts
 ```
+
+## Fonts
+
+AnvilNote renders from a **fixed, bundled font set** (`fonts/`) and compiles
+with `--font-path ./fonts --ignore-system-fonts`, so output never depends on
+system fonts. Font policy (which family is used for title / meta / body /
+heading / code / math) is owned centrally by `src/config/fonts.ts` and
+`templates/shared/anvil-fonts.typ`; **templates control layout only, never
+fonts** (`pnpm templates:lint` enforces this on each `template.typ`).
+
+```bash
+pnpm fonts:download   # fetch the open-source fonts
+pnpm fonts:list       # families Typst sees from the bundle
+pnpm fonts:verify     # assert every required family is present
+pnpm templates:lint   # assert no template sets its own fonts
+```
+
+### Per-render font options
+
+These template options let the user steer the bundled stacks (the renderer
+validates them and rebuilds the stacks; the body/heading/code/math wrapper
+applies to every template, while title/author/date chrome honors them in
+AnvilNote-native templates such as plain-note):
+
+| Option        | Values                                   | Effect |
+| ------------- | ---------------------------------------- | ------ |
+| `primaryLang` | `zh` · `en` · `ja` · `ko` · `th`         | Moves that language's face to the front of every stack |
+| `titleFont`   | `taiwan-pearl` · `source-han`            | CJK face for title / heading (台灣圓體 vs 思源黑體) |
+| `bodyFont`    | `song` · `kai`                           | CJK face for body / author (宋體 vs 楷書) |
+| `dateFont`    | `playfair` · `tai-heritage`              | Author/date display face |
+| `mathMode`    | `default` · `garamond`                   | New Computer Modern Math vs Garamond-Math |
+
+All default to the AnvilNote baseline (`zh` / `taiwan-pearl` / `song` / `playfair` /
+`default`). Unknown values fall back to the default — never to a system font.
 
 ## Typst Requirement
 
@@ -79,7 +115,12 @@ Success:
   "status": "COMPLETED",
   "typstPath": "/absolute/path/to/generated.typ",
   "pdfPath": "/absolute/path/to/generated.pdf",
-  "logs": []
+  "logs": [],
+  "fontConfig": {
+    "fontPresetVersion": "0.1.0",
+    "fontBundle": "anvilnote-default",
+    "mathMode": "default"
+  }
 }
 ```
 

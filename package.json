@@ -9,7 +9,11 @@
     "build": "tsc",
     "start": "node dist/cli.js",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "fonts:download": "tsx scripts/download-fonts.ts",
+    "fonts:verify": "tsx scripts/verify-fonts.ts",
+    "fonts:list": "typst fonts --font-path ./fonts --ignore-system-fonts",
+    "templates:lint": "tsx scripts/lint-templates.ts"
   },
   "dependencies": {
     "dotenv": "^17.4.2",

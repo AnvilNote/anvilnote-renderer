@@ -9,10 +9,9 @@
     margin: (x: 22mm, y: 24mm),
   )
 
-  set text(
-    font: "New Computer Modern",
-    size: 11pt,
-  )
+  // Font policy is owned by templates/shared/anvil-fonts.typ via the renderer
+  // wrapper; templates only control layout. Set size only, never family.
+  set text(size: 11pt)
 
   set par(
     justify: true,
