@@ -104,10 +104,13 @@ export const FONT_PRESETS: Record<FontPresetKey, FontPreset> = {
 
   meta: {
     key: "meta",
+    // Latin serif (Tinos) leads so Western glyphs render proportionally; the CJK
+    // Song face ships its own full-width Latin glyphs and would otherwise own
+    // Latin text. Tinos has no CJK coverage, so CJK falls through to Song.
     label: "Author / Date",
     typstStack: [
-      "TW-MOE-Std-Song",
       "Tinos",
+      "TW-MOE-Std-Song",
       "Noto Serif JP",
       "Noto Serif KR",
       "Noto Serif Thai",
@@ -117,10 +120,11 @@ export const FONT_PRESETS: Record<FontPresetKey, FontPreset> = {
 
   body: {
     key: "body",
+    // Latin serif (Tinos) leads — see the `meta` note above.
     label: "Body",
     typstStack: [
-      "TW-MOE-Std-Song",
       "Tinos",
+      "TW-MOE-Std-Song",
       "Noto Serif JP",
       "Noto Serif KR",
       "Noto Serif Thai",
@@ -167,6 +171,7 @@ export const FONT_PRESETS: Record<FontPresetKey, FontPreset> = {
     label: "Date · Playfair Display",
     typstStack: [
       "Playfair Display",
+      "Tinos",
       "TW-MOE-Std-Song",
       "Noto Serif JP",
       "Noto Serif KR",
@@ -180,6 +185,7 @@ export const FONT_PRESETS: Record<FontPresetKey, FontPreset> = {
     label: "Date · Tai Heritage Pro",
     typstStack: [
       "Tai Heritage Pro",
+      "Tinos",
       "TW-MOE-Std-Song",
       "Noto Serif JP",
       "Noto Serif KR",

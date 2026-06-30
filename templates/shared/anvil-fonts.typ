@@ -145,7 +145,12 @@
   math-face: "default",
 ) = {
   let langs = _lang-order(primary-lang)
-  let serif = langs.map(l => _serif-for(l, body-face)) + ("Noto Serif",)
+  // Latin serif (Tinos) leads so Western glyphs render proportionally. The CJK
+  // serif faces (e.g. TW-MOE-Std-Song) ship their own full-width, mono-looking
+  // Latin glyphs; if they led the stack Typst would use them for Latin text and
+  // never fall through. Tinos has no CJK coverage, so CJK still resolves to the
+  // per-language faces that follow.
+  let serif = ("Tinos",) + langs.map(l => _serif-for(l, body-face)) + ("Noto Serif",)
   let sans = ("Roboto",) + langs.map(l => _sans-for(l, title-face))
   let date-primary = if date-face == "tai-heritage" { "Tai Heritage Pro" } else { "Playfair Display" }
   (

@@ -1,25 +1,33 @@
 {
-  "id": "minimal-lecture",
+  "slug": "minimal-lecture",
   "name": "Minimal Lecture",
   "description": "A clean black-and-white lecture note template.",
   "version": "0.1.0",
+  "engine": {
+    "kind": "local",
+    "entry": "template.typ"
+  },
+  "category": "note",
   "fields": [
     {
       "key": "title",
       "label": "Title",
       "type": "text",
+      "scope": "metadata",
       "required": true
     },
     {
       "key": "author",
       "label": "Author",
       "type": "text",
+      "scope": "metadata",
       "required": false
     },
     {
       "key": "date",
       "label": "Date",
       "type": "date",
+      "scope": "metadata",
       "required": false
     }
   ]
