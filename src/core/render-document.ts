@@ -87,12 +87,23 @@ export async function renderDocument(
   );
   await fs.copyFile(sharedFontsSrc, path.join(buildDir, "anvil-fonts.typ"));
 
+  // Same reasoning as anvil-fonts.typ above: copy the shared callout box next
+  // to the entry so it can be imported as "./anvil-callout.typ". It in turn
+  // imports "./anvil-fonts.typ", so both must land in buildDir together.
+  const sharedCalloutsSrc = resolveFromRendererRoot(
+    "templates",
+    "shared",
+    "anvil-callout.typ",
+  );
+  await fs.copyFile(sharedCalloutsSrc, path.join(buildDir, "anvil-callout.typ"));
+
   // Resolve user font choices (primary language + per-role faces + math mode).
   const fonts = resolveFontChoices(input.template.options);
 
   const entrySource = buildTypstEntry({
     adapterRelPath,
     sharedFontsRelPath: "./anvil-fonts.typ",
+    sharedCalloutsRelPath: "./anvil-callout.typ",
     usesAnvilFontWrapper: template.manifest.usesAnvilFontWrapper,
     fonts,
     meta: input.template.meta,

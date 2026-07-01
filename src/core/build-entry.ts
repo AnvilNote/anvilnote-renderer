@@ -45,6 +45,8 @@ export type BuildTypstEntryInput = {
   adapterRelPath: string;
   /** anvil-fonts.typ import path relative to the entry file. */
   sharedFontsRelPath: string;
+  /** anvil-callout.typ import path relative to the entry file. */
+  sharedCalloutsRelPath: string;
   /** Whether the renderer should wrap the template with apply-anvil-fonts. */
   usesAnvilFontWrapper?: boolean;
   /** Resolved, validated font choices. */
@@ -83,6 +85,7 @@ export function buildTypstEntry(input: BuildTypstEntryInput): string {
 
   const lines = [
     `#import "${input.sharedFontsRelPath}": ${usesAnvilFontWrapper ? "apply-anvil-fonts, " : ""}anvil-font-stacks`,
+    `#import "${input.sharedCalloutsRelPath}": callout`,
     `#import "${input.adapterRelPath}": anvil-template`,
     ``,
   ];
