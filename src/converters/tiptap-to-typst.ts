@@ -1,6 +1,7 @@
 import { latexToTypstMath } from "./latex-to-typst";
 import { createTypstRawBlock } from "./code-block";
 import { escapeTypstString, escapeTypstText } from "../utils/escape-typst";
+import { normalizeCalloutKind } from "../config/callouts";
 
 // Converts a Tiptap document (the canonical anvilnote-web source format) to
 // Typst markup. The web app stores content wrapped as a single-element array
@@ -330,6 +331,15 @@ function renderBlock(node: TiptapNode, offset: number): string {
     case "blockquote": {
       const inner = renderBlocks(asNodes(node.content), offset);
       return inner ? `#quote(block: true)[${inner}]` : "";
+    }
+    case "callout": {
+      const kind = normalizeCalloutKind(
+        typeof node.attrs?.kind === "string" ? node.attrs.kind : undefined,
+      );
+      const title = typeof node.attrs?.title === "string" ? node.attrs.title.trim() : "";
+      const titleArg = title ? `title: [${escapeTypstText(title)}]` : "title: none";
+      const inner = renderBlocks(asNodes(node.content), offset);
+      return `#callout(kind: "${kind}", ${titleArg})[${inner}]`;
     }
     case "codeBlock": {
       // Typst raw block with a safe fence; the language tag drives Typst's
