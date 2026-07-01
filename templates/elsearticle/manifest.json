@@ -1,0 +1,127 @@
+{
+  "slug": "elsearticle",
+  "name": "items.elsearticle.name",
+  "description": "items.elsearticle.description",
+  "version": "0.1.0",
+  "engine": {
+    "kind": "typst-package",
+    "package": "@preview/elsearticle:3.1.0",
+    "entry": "template.typ"
+  },
+  "category": "academic",
+  "tags": ["academic", "journal", "elsevier"],
+  "fonts": ["XITS", "XITS Math", "New Computer Modern"],
+  "headingOffset": 0,
+  "fields": [
+    {
+      "key": "title",
+      "label": "fields.title",
+      "type": "text",
+      "scope": "metadata",
+      "required": true,
+      "default": "Untitled"
+    },
+    {
+      "key": "author",
+      "label": "fields.author",
+      "type": "text",
+      "scope": "metadata",
+      "required": false
+    },
+    {
+      "key": "abstract",
+      "label": "fields.abstract",
+      "type": "textarea",
+      "scope": "metadata",
+      "required": false
+    },
+    {
+      "key": "date",
+      "label": "fields.date",
+      "type": "date",
+      "scope": "metadata",
+      "required": false,
+      "default": "today"
+    },
+    {
+      "key": "journal",
+      "label": "fields.journal",
+      "type": "text",
+      "scope": "option",
+      "required": false
+    },
+    {
+      "key": "paperSize",
+      "label": "fields.paperSize",
+      "type": "select",
+      "scope": "option",
+      "required": false,
+      "default": "a4",
+      "options": ["a4", "us-letter"]
+    },
+    {
+      "key": "numColumns",
+      "label": "fields.numColumns",
+      "type": "select",
+      "scope": "option",
+      "required": false,
+      "default": "1",
+      "options": ["1", "2"]
+    },
+    {
+      "key": "lineNumbering",
+      "label": "fields.lineNumbering",
+      "type": "boolean",
+      "scope": "option",
+      "required": false,
+      "default": false
+    },
+    {
+      "key": "mathMode",
+      "label": "fields.mathMode",
+      "type": "select",
+      "scope": "option",
+      "required": false,
+      "default": "default",
+      "options": ["default", "garamond"]
+    },
+    {
+      "key": "primaryLang",
+      "label": "fields.primaryLang",
+      "type": "select",
+      "scope": "option",
+      "required": false,
+      "default": "zh",
+      "options": ["zh", "en", "ja", "ko", "th"]
+    },
+    {
+      "key": "titleFont",
+      "label": "fields.titleFont",
+      "type": "select",
+      "scope": "option",
+      "required": false,
+      "default": "taiwan-pearl",
+      "options": ["taiwan-pearl", "source-han"]
+    },
+    {
+      "key": "bodyFont",
+      "label": "fields.bodyFont",
+      "type": "select",
+      "scope": "option",
+      "required": false,
+      "default": "song",
+      "options": ["song", "kai"]
+    },
+    {
+      "key": "dateFont",
+      "label": "fields.dateFont",
+      "type": "select",
+      "scope": "option",
+      "required": false,
+      "default": "playfair",
+      "options": ["playfair", "tai-heritage"]
+    }
+  ],
+  "usesAnvilFontWrapper": true,
+  "fontPolicy": "anvil-controlled"
+}

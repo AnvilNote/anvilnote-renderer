@@ -1,0 +1,110 @@
+{
+  "slug": "gakusyun-doc",
+  "name": "items.gakusyun-doc.name",
+  "description": "items.gakusyun-doc.description",
+  "version": "0.1.0",
+  "engine": {
+    "kind": "typst-package",
+    "package": "@preview/gakusyun-doc:1.0.0",
+    "entry": "template.typ"
+  },
+  "category": "report",
+  "tags": ["chinese", "report", "index"],
+  "fonts": ["TW-MOE-Std-Song", "TW-MOE-Std-Kai", "New Computer Modern", "JetBrains Mono"],
+  "headingOffset": 0,
+  "fields": [
+    {
+      "key": "title",
+      "label": "fields.title",
+      "type": "text",
+      "scope": "metadata",
+      "required": true,
+      "default": "Untitled"
+    },
+    {
+      "key": "subtitle",
+      "label": "fields.subtitle",
+      "type": "text",
+      "scope": "metadata",
+      "required": false
+    },
+    {
+      "key": "author",
+      "label": "fields.author",
+      "type": "text",
+      "scope": "metadata",
+      "required": false
+    },
+    {
+      "key": "date",
+      "label": "fields.date",
+      "type": "date",
+      "scope": "metadata",
+      "required": false,
+      "default": "today"
+    },
+    {
+      "key": "titlePage",
+      "label": "fields.titlePage",
+      "type": "boolean",
+      "scope": "option",
+      "required": false,
+      "default": false
+    },
+    {
+      "key": "showIndex",
+      "label": "fields.showIndex",
+      "type": "boolean",
+      "scope": "option",
+      "required": false,
+      "default": false
+    },
+    {
+      "key": "mathMode",
+      "label": "fields.mathMode",
+      "type": "select",
+      "scope": "option",
+      "required": false,
+      "default": "default",
+      "options": ["default", "garamond"]
+    },
+    {
+      "key": "primaryLang",
+      "label": "fields.primaryLang",
+      "type": "select",
+      "scope": "option",
+      "required": false,
+      "default": "zh",
+      "options": ["zh", "en", "ja", "ko", "th"]
+    },
+    {
+      "key": "titleFont",
+      "label": "fields.titleFont",
+      "type": "select",
+      "scope": "option",
+      "required": false,
+      "default": "taiwan-pearl",
+      "options": ["taiwan-pearl", "source-han"]
+    },
+    {
+      "key": "bodyFont",
+      "label": "fields.bodyFont",
+      "type": "select",
+      "scope": "option",
+      "required": false,
+      "default": "song",
+      "options": ["song", "kai"]
+    },
+    {
+      "key": "dateFont",
+      "label": "fields.dateFont",
+      "type": "select",
+      "scope": "option",
+      "required": false,
+      "default": "playfair",
+      "options": ["playfair", "tai-heritage"]
+    }
+  ],
+  "usesAnvilFontWrapper": true,
+  "fontPolicy": "anvil-controlled"
+}

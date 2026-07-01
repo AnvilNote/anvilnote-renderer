@@ -189,6 +189,105 @@
       "license": "OFL-1.1",
       "source": "Google Fonts",
       "path": "fonts/latin/tai-heritage-pro"
+    },
+    {
+      "key": "fira-sans",
+      "label": "Fira Sans",
+      "family": "Fira Sans",
+      "category": "template-sans",
+      "license": "OFL-1.1",
+      "source": "Google Fonts",
+      "path": "fonts/latin/fira-sans"
+    },
+    {
+      "key": "fira-code",
+      "label": "Fira Code",
+      "family": "Fira Code",
+      "category": "template-mono",
+      "license": "OFL-1.1",
+      "source": "tonsky/FiraCode",
+      "path": "fonts/mono/fira-code"
+    },
+    {
+      "key": "ibm-plex-mono",
+      "label": "IBM Plex Mono",
+      "family": "IBM Plex Mono",
+      "category": "template-mono",
+      "license": "OFL-1.1",
+      "source": "Google Fonts",
+      "path": "fonts/mono/ibm-plex-mono"
+    },
+    {
+      "key": "tex-gyre-pagella",
+      "label": "TeX Gyre Pagella",
+      "family": "TeX Gyre Pagella",
+      "category": "template-serif-math",
+      "license": "GUST Font License",
+      "source": "GUST e-foundry (CTAN)",
+      "path": "fonts/math/tex-gyre-pagella"
+    },
+    {
+      "key": "tex-gyre-pagella-math",
+      "label": "TeX Gyre Pagella Math",
+      "family": "TeX Gyre Pagella Math",
+      "category": "template-math",
+      "license": "GUST Font License",
+      "source": "GUST e-foundry (CTAN)",
+      "path": "fonts/math/tex-gyre-pagella"
+    },
+    {
+      "key": "switzer",
+      "label": "Switzer",
+      "family": "Switzer",
+      "category": "template-sans",
+      "license": "OFL-1.1",
+      "source": "Fontshare",
+      "path": "fonts/latin/switzer"
+    },
+    {
+      "key": "source-serif-4",
+      "label": "Source Serif 4",
+      "family": "Source Serif 4",
+      "category": "template-serif",
+      "license": "OFL-1.1",
+      "source": "Adobe Source Serif",
+      "path": "fonts/latin/source-serif-4"
+    },
+    {
+      "key": "source-sans-3",
+      "label": "Source Sans 3",
+      "family": "Source Sans 3",
+      "category": "template-sans",
+      "license": "OFL-1.1",
+      "source": "Adobe Source Sans",
+      "path": "fonts/latin/source-sans-3"
+    },
+    {
+      "key": "source-code-pro",
+      "label": "Source Code Pro",
+      "family": "Source Code Pro",
+      "category": "template-mono",
+      "license": "OFL-1.1",
+      "source": "Adobe Source Code Pro",
+      "path": "fonts/mono/source-code-pro"
+    },
+    {
+      "key": "xits",
+      "label": "XITS",
+      "family": "XITS",
+      "category": "template-serif",
+      "license": "OFL-1.1",
+      "source": "aliftype/xits",
+      "path": "fonts/math/xits"
+    },
+    {
+      "key": "xits-math",
+      "label": "XITS Math",
+      "family": "XITS Math",
+      "category": "template-math",
+      "license": "OFL-1.1",
+      "source": "aliftype/xits",
+      "path": "fonts/math/xits"
     }
   ]
 }

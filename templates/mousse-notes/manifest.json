@@ -1,0 +1,86 @@
+{
+  "slug": "mousse-notes",
+  "name": "items.mousse-notes.name",
+  "description": "items.mousse-notes.description",
+  "version": "0.1.0",
+  "engine": {
+    "kind": "typst-package",
+    "package": "@preview/mousse-notes:1.1.0",
+    "entry": "template.typ"
+  },
+  "category": "note",
+  "tags": ["book", "cover", "theorems"],
+  "fonts": ["New Computer Modern", "New Computer Modern Math"],
+  "headingOffset": 0,
+  "fields": [
+    {
+      "key": "title",
+      "label": "fields.title",
+      "type": "text",
+      "scope": "metadata",
+      "required": true,
+      "default": "Untitled"
+    },
+    {
+      "key": "subtitle",
+      "label": "fields.subtitle",
+      "type": "text",
+      "scope": "metadata",
+      "required": false
+    },
+    {
+      "key": "author",
+      "label": "fields.author",
+      "type": "text",
+      "scope": "metadata",
+      "required": false
+    },
+    {
+      "key": "mathMode",
+      "label": "fields.mathMode",
+      "type": "select",
+      "scope": "option",
+      "required": false,
+      "default": "default",
+      "options": ["default", "garamond"]
+    },
+    {
+      "key": "primaryLang",
+      "label": "fields.primaryLang",
+      "type": "select",
+      "scope": "option",
+      "required": false,
+      "default": "zh",
+      "options": ["zh", "en", "ja", "ko", "th"]
+    },
+    {
+      "key": "titleFont",
+      "label": "fields.titleFont",
+      "type": "select",
+      "scope": "option",
+      "required": false,
+      "default": "taiwan-pearl",
+      "options": ["taiwan-pearl", "source-han"]
+    },
+    {
+      "key": "bodyFont",
+      "label": "fields.bodyFont",
+      "type": "select",
+      "scope": "option",
+      "required": false,
+      "default": "song",
+      "options": ["song", "kai"]
+    },
+    {
+      "key": "dateFont",
+      "label": "fields.dateFont",
+      "type": "select",
+      "scope": "option",
+      "required": false,
+      "default": "playfair",
+      "options": ["playfair", "tai-heritage"]
+    }
+  ],
+  "usesAnvilFontWrapper": true,
+  "fontPolicy": "anvil-controlled"
+}

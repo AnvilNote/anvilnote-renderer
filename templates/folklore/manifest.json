@@ -1,0 +1,102 @@
+{
+  "slug": "folklore",
+  "name": "items.folklore.name",
+  "description": "items.folklore.description",
+  "version": "0.2.0",
+  "engine": {
+    "kind": "typst-package",
+    "package": "@preview/folklore:0.2.0",
+    "entry": "template.typ"
+  },
+  "category": "note",
+  "tags": ["book", "fiction", "novel"],
+  "fonts": ["EB Garamond"],
+  "headingOffset": 0,
+  "fields": [
+    {
+      "key": "title",
+      "label": "fields.title",
+      "type": "text",
+      "scope": "metadata",
+      "required": true,
+      "default": "Untitled"
+    },
+    {
+      "key": "author",
+      "label": "fields.author",
+      "type": "text",
+      "scope": "metadata",
+      "required": false
+    },
+    {
+      "key": "preface",
+      "label": "fields.preface",
+      "type": "textarea",
+      "scope": "metadata",
+      "required": false
+    },
+    {
+      "key": "toc",
+      "label": "fields.toc",
+      "type": "boolean",
+      "scope": "option",
+      "required": false,
+      "default": true
+    },
+    {
+      "key": "numberChapters",
+      "label": "fields.numberChapters",
+      "type": "boolean",
+      "scope": "option",
+      "required": false,
+      "default": true
+    },
+    {
+      "key": "mathMode",
+      "label": "fields.mathMode",
+      "type": "select",
+      "scope": "option",
+      "required": false,
+      "default": "default",
+      "options": ["default", "garamond"]
+    },
+    {
+      "key": "primaryLang",
+      "label": "fields.primaryLang",
+      "type": "select",
+      "scope": "option",
+      "required": false,
+      "default": "zh",
+      "options": ["zh", "en", "ja", "ko", "th"]
+    },
+    {
+      "key": "titleFont",
+      "label": "fields.titleFont",
+      "type": "select",
+      "scope": "option",
+      "required": false,
+      "default": "taiwan-pearl",
+      "options": ["taiwan-pearl", "source-han"]
+    },
+    {
+      "key": "bodyFont",
+      "label": "fields.bodyFont",
+      "type": "select",
+      "scope": "option",
+      "required": false,
+      "default": "song",
+      "options": ["song", "kai"]
+    },
+    {
+      "key": "dateFont",
+      "label": "fields.dateFont",
+      "type": "select",
+      "scope": "option",
+      "required": false,
+      "default": "playfair",
+      "options": ["playfair", "tai-heritage"]
+    }
+  ],
+  "usesAnvilFontWrapper": true,
+  "fontPolicy": "anvil-controlled"
+}
