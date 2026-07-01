@@ -40,6 +40,7 @@ const NOTO = "https://github.com/notofonts/notofonts.github.io/raw/main/fonts";
 const EBG = "https://github.com/octaviopardo/EBGaramond12/raw/master/fonts/ttf";
 const ROBOTO = "https://cdn.jsdelivr.net/fontsource/fonts/roboto@latest";
 const PLAYFAIR = "https://cdn.jsdelivr.net/fontsource/fonts/playfair-display@latest";
+const CTAN = "https://ftp.gwdg.de/pub/ctan/fonts";
 
 const AUTO: AutoEntry[] = [
   {
@@ -152,6 +153,37 @@ const AUTO: AutoEntry[] = [
       },
     ],
   },
+  {
+    key: "fira-sans",
+    dir: "latin/fira-sans",
+    files: [
+      { url: `${GF}/ofl/firasans/FiraSans-Regular.ttf`, name: "FiraSans-Regular.ttf" },
+      { url: `${GF}/ofl/firasans/FiraSans-Bold.ttf`, name: "FiraSans-Bold.ttf" },
+      { url: `${GF}/ofl/firasans/FiraSans-Italic.ttf`, name: "FiraSans-Italic.ttf" },
+      { url: `${GF}/ofl/firasans/FiraSans-BoldItalic.ttf`, name: "FiraSans-BoldItalic.ttf" },
+    ],
+  },
+  {
+    key: "ibm-plex-mono",
+    dir: "mono/ibm-plex-mono",
+    files: [
+      { url: `${GF}/ofl/ibmplexmono/IBMPlexMono-Regular.ttf`, name: "IBMPlexMono-Regular.ttf" },
+      { url: `${GF}/ofl/ibmplexmono/IBMPlexMono-Bold.ttf`, name: "IBMPlexMono-Bold.ttf" },
+      { url: `${GF}/ofl/ibmplexmono/IBMPlexMono-Italic.ttf`, name: "IBMPlexMono-Italic.ttf" },
+      { url: `${GF}/ofl/ibmplexmono/IBMPlexMono-BoldItalic.ttf`, name: "IBMPlexMono-BoldItalic.ttf" },
+    ],
+  },
+  {
+    key: "tex-gyre-pagella",
+    dir: "math/tex-gyre-pagella",
+    files: [
+      { url: `${CTAN}/tex-gyre/opentype/texgyrepagella-regular.otf`, name: "TeXGyrePagella-Regular.otf" },
+      { url: `${CTAN}/tex-gyre/opentype/texgyrepagella-bold.otf`, name: "TeXGyrePagella-Bold.otf" },
+      { url: `${CTAN}/tex-gyre/opentype/texgyrepagella-italic.otf`, name: "TeXGyrePagella-Italic.otf" },
+      { url: `${CTAN}/tex-gyre/opentype/texgyrepagella-bolditalic.otf`, name: "TeXGyrePagella-BoldItalic.otf" },
+      { url: `${CTAN}/tex-gyre-math/opentype/texgyrepagella-math.otf`, name: "TeXGyrePagellaMath-Regular.otf" },
+    ],
+  },
 ];
 
 const NOTO_CJK = "https://github.com/notofonts/noto-cjk/releases/download";
@@ -216,6 +248,73 @@ const ZIPS: ZipEntry[] = [
       { match: "otf/NewCM10-Bold.otf", name: "NewCM10-Bold.otf" },
       { match: "otf/NewCM10-Italic.otf", name: "NewCM10-Italic.otf" },
       { match: "otf/NewCM10-BoldItalic.otf", name: "NewCM10-BoldItalic.otf" },
+    ],
+  },
+  {
+    key: "fira-code",
+    dir: "mono/fira-code",
+    // Fira Code has no italic style; only weighted upright faces.
+    url: "https://github.com/tonsky/FiraCode/releases/download/6.2/Fira_Code_v6.2.zip",
+    members: [
+      { match: "ttf/FiraCode-Regular.ttf", name: "FiraCode-Regular.ttf" },
+      { match: "ttf/FiraCode-Bold.ttf", name: "FiraCode-Bold.ttf" },
+    ],
+  },
+  {
+    key: "switzer",
+    dir: "latin/switzer",
+    url: "https://api.fontshare.com/v2/fonts/download/switzer",
+    members: [
+      { match: "Switzer_Complete/Fonts/OTF/Switzer-Regular.otf", name: "Switzer-Regular.otf" },
+      { match: "Switzer_Complete/Fonts/OTF/Switzer-Bold.otf", name: "Switzer-Bold.otf" },
+      { match: "Switzer_Complete/Fonts/OTF/Switzer-Italic.otf", name: "Switzer-Italic.otf" },
+      { match: "Switzer_Complete/Fonts/OTF/Switzer-BoldItalic.otf", name: "Switzer-BoldItalic.otf" },
+    ],
+  },
+  {
+    key: "source-serif-4",
+    dir: "latin/source-serif-4",
+    url: "https://github.com/adobe-fonts/source-serif/releases/download/4.005R/source-serif-4.005_Desktop.zip",
+    members: [
+      { match: "OTF/SourceSerif4-Regular.otf", name: "SourceSerif4-Regular.otf" },
+      { match: "OTF/SourceSerif4-Bold.otf", name: "SourceSerif4-Bold.otf" },
+      { match: "OTF/SourceSerif4-It.otf", name: "SourceSerif4-Italic.otf" },
+      { match: "OTF/SourceSerif4-BoldIt.otf", name: "SourceSerif4-BoldItalic.otf" },
+    ],
+  },
+  {
+    key: "source-sans-3",
+    dir: "latin/source-sans-3",
+    url: "https://github.com/adobe-fonts/source-sans/releases/download/3.052R/OTF-source-sans-3.052R.zip",
+    members: [
+      { match: "OTF/SourceSans3-Regular.otf", name: "SourceSans3-Regular.otf" },
+      { match: "OTF/SourceSans3-Bold.otf", name: "SourceSans3-Bold.otf" },
+      { match: "OTF/SourceSans3-It.otf", name: "SourceSans3-Italic.otf" },
+      { match: "OTF/SourceSans3-BoldIt.otf", name: "SourceSans3-BoldItalic.otf" },
+    ],
+  },
+  {
+    key: "source-code-pro",
+    dir: "mono/source-code-pro",
+    url: "https://github.com/adobe-fonts/source-code-pro/releases/download/2.042R-u%2F1.062R-i%2F1.026R-vf/OTF-source-code-pro-2.042R-u_1.062R-i.zip",
+    members: [
+      { match: "OTF/SourceCodePro-Regular.otf", name: "SourceCodePro-Regular.otf" },
+      { match: "OTF/SourceCodePro-Bold.otf", name: "SourceCodePro-Bold.otf" },
+      { match: "OTF/SourceCodePro-It.otf", name: "SourceCodePro-Italic.otf" },
+      { match: "OTF/SourceCodePro-BoldIt.otf", name: "SourceCodePro-BoldItalic.otf" },
+    ],
+  },
+  {
+    key: "xits",
+    dir: "math/xits",
+    url: "https://github.com/aliftype/xits/releases/download/v1.302/XITS-1.302.zip",
+    members: [
+      { match: "XITS-1.302/XITS-Regular.otf", name: "XITS-Regular.otf" },
+      { match: "XITS-1.302/XITS-Bold.otf", name: "XITS-Bold.otf" },
+      { match: "XITS-1.302/XITS-Italic.otf", name: "XITS-Italic.otf" },
+      { match: "XITS-1.302/XITS-BoldItalic.otf", name: "XITS-BoldItalic.otf" },
+      { match: "XITS-1.302/XITSMath-Regular.otf", name: "XITSMath-Regular.otf" },
+      { match: "XITS-1.302/XITSMath-Bold.otf", name: "XITSMath-Bold.otf" },
     ],
   },
 ];

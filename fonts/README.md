@@ -21,11 +21,21 @@ directory are used — system fonts are ignored entirely.
 fonts/
   zh/    moe-kai/ moe-song/ source-han-sans-tw/ taiwan-pearl/
   latin/ tinos/ noto-sans/ noto-serif/ roboto/ eb-garamond/
+         fira-sans/ switzer/ source-serif-4/ source-sans-3/
   cjk/   noto-serif-jp/ noto-sans-jp/ noto-serif-kr/ noto-sans-kr/
   thai/  noto-serif-thai/ noto-sans-thai/
   mono/  jetbrains-mono/ noto-sans-mono/
+         fira-code/ ibm-plex-mono/ source-code-pro/
   math/  new-computer-modern/ garamond-math/
+         tex-gyre-pagella/ xits/
 ```
+
+`fira-sans`, `fira-code`, `ibm-plex-mono`, `tex-gyre-pagella` (+ Math), `switzer`,
+`source-serif-4`, `source-sans-3`, `source-code-pro`, and `xits` (+ XITS Math)
+are not part of the `anvilnote-default` bundle in `src/config/fonts.ts` — they
+were pulled in to support external community templates (Typsidian, Obelisk,
+Metropole Report, Elsearticle) that expect these families by name. They ride
+along in the same bundle/manifest so `--font-path ./fonts` resolves them too.
 
 `manifest.json` is the catalog (key, family, license, source, path). The Typst
 **family names** there and in `src/config/fonts.ts` /
