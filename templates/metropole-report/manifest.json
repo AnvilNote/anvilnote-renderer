@@ -63,7 +63,7 @@
     {
       "key": "accentColor",
       "label": "fields.accentColor",
-      "type": "text",
+      "type": "color",
       "scope": "option",
       "required": false,
       "default": "#c53a2f"

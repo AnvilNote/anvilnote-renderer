@@ -58,8 +58,10 @@
   accent-color: rgb("#111827"),
   // Color for the table of contents entries.
   toc-color: rgb("#0000ff"),
-  // Font for the page numbers in the table of contents.
-  toc-page-font: "Times New Roman",
+  // Font for the page numbers in the table of contents. Liberation Serif is
+  // metric-compatible with Times New Roman (same glyph widths/line height)
+  // but OFL-1.1 licensed, so it can be bundled and redistributed freely.
+  toc-page-font: "Liberation Serif",
   rule-color: rgb("#d1d5db"),
   callout-fill: rgb("#f5f5f4"),
   callout-stroke: rgb("#d6d3d1"),
