@@ -42,6 +42,7 @@ export async function renderDocument(
     ? tiptapToTypst(input.document.content, {
         headingOffset: template.manifest.headingOffset,
         images,
+        footnoteStyle: template.manifest.footnoteStyle,
       })
     : blocknoteToTypst(input.document.content, {
         headingOffset: template.manifest.headingOffset,
@@ -105,6 +106,7 @@ export async function renderDocument(
     sharedFontsRelPath: "./anvil-fonts.typ",
     sharedCalloutsRelPath: "./anvil-callout.typ",
     usesAnvilFontWrapper: template.manifest.usesAnvilFontWrapper,
+    footnoteStyle: template.manifest.footnoteStyle,
     fonts,
     meta: input.template.meta,
     options: input.template.options,

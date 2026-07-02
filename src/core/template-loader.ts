@@ -37,6 +37,11 @@ const templateManifestSchema = z.object({
   // that contract. Older manifests default to the enforced policy.
   usesAnvilFontWrapper: z.boolean().default(true),
   fontPolicy: z.literal("anvil-controlled").default("anvil-controlled"),
+  // How footnoteReference nodes render in Typst. Most templates use Typst's
+  // native #footnote[...] (no import needed); margin-note-style templates
+  // (toffee-tufte) instead emit #sidenote[...], imported from the template's
+  // own package — see build-entry.ts and tiptap-to-typst.ts.
+  footnoteStyle: z.enum(["footnote", "sidenote"]).default("footnote"),
   fields: z.array(templateFieldSchema),
 });
 

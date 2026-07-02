@@ -49,6 +49,10 @@ export type BuildTypstEntryInput = {
   sharedCalloutsRelPath: string;
   /** Whether the renderer should wrap the template with apply-anvil-fonts. */
   usesAnvilFontWrapper?: boolean;
+  /** "sidenote" templates need that symbol imported from the adapter into
+   *  the entry file's scope, since the generated `body` calls it directly
+   *  as `#sidenote[...]` — "footnote" needs nothing (Typst builtin). */
+  footnoteStyle?: "footnote" | "sidenote";
   /** Resolved, validated font choices. */
   fonts: FontChoices;
   meta: Record<string, FieldValue>;
@@ -74,6 +78,11 @@ const RAW_BLOCK_STYLE = [
   `)`,
 ].join("\n");
 
+// Typst's default footnote reference marker sits a little low relative to
+// the surrounding text; raise it slightly (negative baseline = up) so it
+// reads as a proper superscript across every template.
+const FOOTNOTE_STYLE = [`#show footnote: set text(baseline: -0.3em)`].join("\n");
+
 /**
  * Build the Typst entry file. The renderer recognizes one contract for every
  * template — `anvil-template(meta, options, body)` — and lets each adapter
@@ -83,10 +92,13 @@ export function buildTypstEntry(input: BuildTypstEntryInput): string {
   const f = input.fonts;
   const usesAnvilFontWrapper = input.usesAnvilFontWrapper ?? true;
 
+  const adapterSymbols =
+    input.footnoteStyle === "sidenote" ? "anvil-template, sidenote" : "anvil-template";
+
   const lines = [
     `#import "${input.sharedFontsRelPath}": ${usesAnvilFontWrapper ? "apply-anvil-fonts, " : ""}anvil-font-stacks`,
     `#import "${input.sharedCalloutsRelPath}": callout`,
-    `#import "${input.adapterRelPath}": anvil-template`,
+    `#import "${input.adapterRelPath}": ${adapterSymbols}`,
     ``,
   ];
 
@@ -130,6 +142,8 @@ export function buildTypstEntry(input: BuildTypstEntryInput): string {
 
   lines.push(
     RAW_BLOCK_STYLE,
+    ``,
+    FOOTNOTE_STYLE,
     ``,
     input.body,
     ``,

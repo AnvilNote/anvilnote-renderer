@@ -1,0 +1,120 @@
+{
+  "slug": "toffee-tufte",
+  "name": "items.toffee-tufte.name",
+  "description": "items.toffee-tufte.description",
+  "version": "0.1.0",
+  "engine": {
+    "kind": "typst-package",
+    "package": "@preview/toffee-tufte:0.1.1",
+    "entry": "template.typ"
+  },
+  "category": "report",
+  "tags": ["report", "academic", "sidenotes"],
+  "fonts": ["Source Serif 4", "Source Sans 3", "Source Code Pro"],
+  "headingOffset": 0,
+  "fields": [
+    {
+      "key": "title",
+      "label": "fields.title",
+      "type": "text",
+      "scope": "metadata",
+      "required": true,
+      "default": "Untitled"
+    },
+    {
+      "key": "author",
+      "label": "fields.author",
+      "type": "text",
+      "scope": "metadata",
+      "required": false
+    },
+    {
+      "key": "date",
+      "label": "fields.date",
+      "type": "date",
+      "scope": "metadata",
+      "required": false,
+      "default": "today"
+    },
+    {
+      "key": "toc",
+      "label": "fields.toc",
+      "type": "boolean",
+      "scope": "option",
+      "required": false,
+      "default": false
+    },
+    {
+      "key": "fullWidth",
+      "label": "fields.fullWidth",
+      "type": "boolean",
+      "scope": "option",
+      "required": false,
+      "default": false
+    },
+    {
+      "key": "header",
+      "label": "fields.header",
+      "type": "boolean",
+      "scope": "option",
+      "required": false,
+      "default": true
+    },
+    {
+      "key": "footer",
+      "label": "fields.footer",
+      "type": "boolean",
+      "scope": "option",
+      "required": false,
+      "default": true
+    },
+    {
+      "key": "primaryLang",
+      "label": "fields.primaryLang",
+      "type": "select",
+      "scope": "option",
+      "required": false,
+      "default": "zh",
+      "options": ["zh", "en", "ja", "ko", "th"]
+    },
+    {
+      "key": "titleFont",
+      "label": "fields.titleFont",
+      "type": "select",
+      "scope": "option",
+      "required": false,
+      "default": "taiwan-pearl",
+      "options": ["taiwan-pearl", "source-han"]
+    },
+    {
+      "key": "bodyFont",
+      "label": "fields.bodyFont",
+      "type": "select",
+      "scope": "option",
+      "required": false,
+      "default": "song",
+      "options": ["song", "kai"]
+    },
+    {
+      "key": "dateFont",
+      "label": "fields.dateFont",
+      "type": "select",
+      "scope": "option",
+      "required": false,
+      "default": "playfair",
+      "options": ["playfair", "tai-heritage"]
+    },
+    {
+      "key": "mathMode",
+      "label": "fields.mathMode",
+      "type": "select",
+      "scope": "option",
+      "required": false,
+      "default": "default",
+      "options": ["default", "garamond"]
+    }
+  ],
+  "usesAnvilFontWrapper": true,
+  "fontPolicy": "anvil-controlled",
+  "footnoteStyle": "sidenote"
+}
