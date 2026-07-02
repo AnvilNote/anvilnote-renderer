@@ -26,10 +26,22 @@ type TiptapToTypstOptions = {
   headingOffset?: number;
   /** Filled with decoded data-URL images encountered during conversion. */
   images?: ImageAsset[];
+  /** Typst function footnoteReference nodes render as — see
+   *  template.ts's footnoteStyle. Defaults to Typst's native #footnote. */
+  footnoteStyle?: "footnote" | "sidenote";
 };
 
 // Collector for the current conversion (the CLI runs one conversion at a time).
 let imageSink: ImageAsset[] | null = null;
+let footnoteStyle: "footnote" | "sidenote" = "footnote";
+
+// Maps a footnote's `data-id` to its rendered Typst content, built once per
+// conversion from the trailing `footnotes` node (see tiptapToTypst). Typst's
+// #footnote[...] takes its content inline at the reference's position — the
+// opposite shape of tiptap-footnotes' DOM (a separate trailing list the
+// reference points at by id) — so references are resolved through this map
+// instead of rendering the footnotes list as a visible block.
+let footnoteMap: Map<string, string> | null = null;
 
 const IMAGE_MIME_EXT: Record<string, string> = {
   "image/png": "png",
@@ -189,6 +201,15 @@ export function inlineToTypst(content: unknown): string {
       }
       if (type === "hardBreak") {
         return " \\ ";
+      }
+      if (type === "footnoteReference") {
+        const id = node.attrs?.["data-id"];
+        const inner = typeof id === "string" ? footnoteMap?.get(id) : undefined;
+        // A reference whose footnote content is missing (shouldn't happen —
+        // the extension keeps them in sync — but degrade quietly rather than
+        // aborting the render) is dropped rather than emitting an empty
+        // #footnote[], which Typst would still number.
+        return inner !== undefined ? `#${footnoteStyle}[${inner}]` : "";
       }
       return "";
     })
@@ -368,6 +389,11 @@ function renderBlock(node: TiptapNode, offset: number): string {
       return renderTable(node, offset);
     case "hardBreak":
       return "";
+    case "footnotes":
+      // The trailing footnotes list itself is never rendered as a visible
+      // block — its content is inlined at each footnoteReference via
+      // footnoteMap (built in tiptapToTypst) using Typst's #footnote[...].
+      return "";
     default:
       return inlineToTypst(node.content);
   }
@@ -382,15 +408,33 @@ function renderBlocks(nodes: TiptapNode[], offset: number): string {
     .trim();
 }
 
+// Builds data-id -> rendered-content for every `footnote` node found under
+// the doc's trailing `footnotes` list (tiptap-footnotes always nests them
+// one level: footnotes > footnote > paragraph+).
+function buildFootnoteMap(nodes: TiptapNode[], offset: number): Map<string, string> {
+  const map = new Map<string, string>();
+  const footnotesNode = nodes.find((node) => node.type === "footnotes");
+  for (const footnote of asNodes(footnotesNode?.content)) {
+    const id = footnote.attrs?.["data-id"];
+    if (typeof id === "string") {
+      map.set(id, renderBlocks(asNodes(footnote.content), offset));
+    }
+  }
+  return map;
+}
+
 export function tiptapToTypst(content: unknown[], opts: TiptapToTypstOptions = {}) {
   imageSink = opts.images ?? null;
+  footnoteStyle = opts.footnoteStyle ?? "footnote";
   const offset = opts.headingOffset ?? 0;
   const first = Array.isArray(content) ? content[0] : undefined;
   const nodes =
     first && typeof first === "object" && (first as TiptapNode).type === "doc"
       ? asNodes((first as TiptapNode).content)
       : asNodes(content);
+  footnoteMap = buildFootnoteMap(nodes, offset);
   const body = renderBlocks(nodes, offset);
   imageSink = null;
+  footnoteMap = null;
   return body;
 }

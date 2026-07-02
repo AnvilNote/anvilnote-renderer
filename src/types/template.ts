@@ -46,6 +46,8 @@ export type TemplateManifest = {
   usesAnvilFontWrapper: boolean;
   /** Font ownership contract; always AnvilNote-controlled. */
   fontPolicy: "anvil-controlled";
+  /** How footnoteReference nodes render in Typst — see template-loader.ts. */
+  footnoteStyle: "footnote" | "sidenote";
   fields: TemplateField[];
 };
 
