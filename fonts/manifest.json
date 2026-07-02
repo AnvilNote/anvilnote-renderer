@@ -288,6 +288,42 @@
       "license": "OFL-1.1",
       "source": "aliftype/xits",
       "path": "fonts/math/xits"
+    },
+    {
+      "key": "barlow",
+      "label": "Barlow",
+      "family": "Barlow",
+      "category": "template-sans",
+      "license": "OFL-1.1",
+      "source": "Google Fonts",
+      "path": "fonts/Barlow-*.ttf"
+    },
+    {
+      "key": "new-computer-modern-sans",
+      "label": "New Computer Modern Sans",
+      "family": "New Computer Modern Sans",
+      "category": "template-sans",
+      "license": "GUST Font License / OFL-compatible",
+      "source": "New Computer Modern",
+      "path": "fonts/NewCMSans10-*.otf"
+    },
+    {
+      "key": "source-sans-pro",
+      "label": "Source Sans Pro",
+      "family": "Source Sans Pro",
+      "category": "template-sans",
+      "license": "OFL-1.1",
+      "source": "Adobe Source Sans (legacy pre-Source Sans 3 name)",
+      "path": "fonts/SourceSansPro-*.otf"
+    },
+    {
+      "key": "cmu-typewriter-text",
+      "label": "CMU Typewriter Text",
+      "family": "CMU Typewriter Text",
+      "category": "template-mono",
+      "license": "CM-Unicode custom license (permissive, unrestricted use)",
+      "source": "CM-Unicode project (Andrey V. Panov)",
+      "path": "fonts/cmuntt.otf"
     }
   ]
 }

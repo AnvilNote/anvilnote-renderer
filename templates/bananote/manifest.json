@@ -59,7 +59,7 @@
     {
       "key": "bananaColor",
       "label": "fields.bananaColor",
-      "type": "text",
+      "type": "color",
       "scope": "option",
       "required": false,
       "default": "#FFE135"

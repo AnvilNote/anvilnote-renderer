@@ -20,7 +20,7 @@
     "cwTeX Q Ming",
     "cwTeX Q Yuan",
     "cwTeX Q Hei",
-    "Times New Roman"
+    "Liberation Serif"
   ],
   "headingOffset": 1,
   "fields": [
@@ -62,6 +62,15 @@
       "scope": "option",
       "required": false,
       "default": true
+    },
+    {
+      "key": "linkColor",
+      "label": "fields.linkColor",
+      "type": "color",
+      "scope": "option",
+      "required": false,
+      "default": "#0000ff",
+      "dependsOn": { "key": "colorlinks", "value": true }
     }
   ],
   "usesAnvilFontWrapper": false,

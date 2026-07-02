@@ -1,4 +1,10 @@
-export type TemplateFieldType = "text" | "textarea" | "date" | "boolean" | "select";
+export type TemplateFieldType =
+  | "text"
+  | "textarea"
+  | "date"
+  | "boolean"
+  | "select"
+  | "color";
 
 export type TemplateFieldScope = "metadata" | "option";
 
@@ -11,6 +17,7 @@ export type TemplateField = {
   default?: string | boolean;
   placeholder?: string;
   options?: string[];
+  dependsOn?: { key: string; value: string | boolean | null };
 };
 
 export type TemplateEngineKind = "typst-package" | "local";
