@@ -50,10 +50,17 @@ const IMAGE_MIME_EXT: Record<string, string> = {
   "image/gif": "gif",
   "image/svg+xml": "svg",
   "image/webp": "webp",
+  // Typst 0.14+ can embed a PDF directly via image() — see AnvilNote-web's
+  // image.ts: a PDF "image" is stored as a PNG `src` (for the browser's
+  // <img>-based editor preview, which can't display application/pdf at
+  // all) plus the original PDF in `pdfSrc`, preferred here for the vector-
+  // quality export.
+  "application/pdf": "pdf",
 };
 
 function renderImage(node: TiptapNode): string {
-  const src = typeof node.attrs?.src === "string" ? node.attrs.src : "";
+  const pdfSrc = typeof node.attrs?.pdfSrc === "string" ? node.attrs.pdfSrc : "";
+  const src = pdfSrc || (typeof node.attrs?.src === "string" ? node.attrs.src : "");
   if (!src) return "";
 
   const alignAttr = String(node.attrs?.align ?? "center");
@@ -65,12 +72,17 @@ function renderImage(node: TiptapNode): string {
     typeof node.attrs?.caption === "string" ? node.attrs.caption.trim() : "";
 
   // Only inline data URLs can be embedded; Typst can't fetch remote URLs.
-  const match = src.match(/^data:(image\/[a-z0-9.+-]+);base64,(.+)$/i);
+  const match = src.match(/^data:(image\/[a-z0-9.+-]+|application\/pdf);base64,(.+)$/i);
   if (!match || !imageSink) {
     return "";
   }
 
-  const ext = IMAGE_MIME_EXT[match[1].toLowerCase()] ?? "png";
+  // No `?? "png"` fallback: an unrecognized MIME means these bytes are some
+  // format IMAGE_MIME_EXT doesn't know how to label, and guessing "png"
+  // would hand Typst real GIF/WebP/whatever bytes under a .png name it then
+  // fails to decode — skip instead of embedding something broken.
+  const ext = IMAGE_MIME_EXT[match[1].toLowerCase()];
+  if (!ext) return "";
   const filename = `image-${imageSink.length}.${ext}`;
   imageSink.push({ filename, base64: match[2] });
 
