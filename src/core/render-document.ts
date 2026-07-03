@@ -34,6 +34,12 @@ export async function renderDocument(
 
   const template = await loadTemplate(input.template.slug);
   await ensureMathLoaded();
+  // Resolved here (not further down, where this used to live) so its
+  // primaryLang can also drive cross-ref display text ("圖 1" vs "Figure
+  // 1") during body conversion below — the font stack and the cross-ref
+  // wording both key off the same document-language setting.
+  const fonts = resolveFontChoices(input.template.options);
+
   // anvilnote-web now stores Tiptap JSON (wrapped as [{ type: "doc", … }]).
   // Legacy BlockNote documents (a flat block array) still convert via the old
   // path so previously stored notes keep rendering.
@@ -43,6 +49,7 @@ export async function renderDocument(
         headingOffset: template.manifest.headingOffset,
         images,
         footnoteStyle: template.manifest.footnoteStyle,
+        primaryLang: fonts.primaryLang,
       })
     : blocknoteToTypst(input.document.content, {
         headingOffset: template.manifest.headingOffset,
@@ -97,9 +104,6 @@ export async function renderDocument(
     "anvil-callout.typ",
   );
   await fs.copyFile(sharedCalloutsSrc, path.join(buildDir, "anvil-callout.typ"));
-
-  // Resolve user font choices (primary language + per-role faces + math mode).
-  const fonts = resolveFontChoices(input.template.options);
 
   const entrySource = buildTypstEntry({
     adapterRelPath,

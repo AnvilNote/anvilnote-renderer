@@ -36,3 +36,16 @@ export function escapeTypstString(value: string) {
 export function escapeTypstCode(value: string) {
   return value.replace(/```/g, "``\\`");
 }
+
+// A Typst label's dedicated <name> syntax only allows letters, numbers, _,
+// -, :, and . (the label(str) constructor is more permissive, but the
+// cross-ref feature needs the plain <name> form both to WRITE the label
+// next to a figure/table/equation and to emit a matching @name reference
+// for it). AnvilNote's own ids are crypto.randomUUID() — valid, but the
+// hyphens are the only overlap; prefixing with a letter guards against the
+// (never actually possible, since randomUUID never starts with a digit,
+// but not worth relying on that) case of a label starting with a digit,
+// which Typst also rejects.
+export function sanitizeTypstLabel(id: string): string {
+  return `xref-${id.replace(/[^a-zA-Z0-9_\-:.]/g, "-")}`;
+}

@@ -1,7 +1,8 @@
 import { latexToTypstMath } from "./latex-to-typst";
 import { createTypstRawBlock } from "./code-block";
-import { escapeTypstString, escapeTypstText } from "../utils/escape-typst";
+import { escapeTypstString, escapeTypstText, sanitizeTypstLabel } from "../utils/escape-typst";
 import { normalizeCalloutKind } from "../config/callouts";
+import { formatCrossRefLabel } from "../config/cross-ref-labels";
 
 // Converts a Tiptap document (the canonical anvilnote-web source format) to
 // Typst markup. The web app stores content wrapped as a single-element array
@@ -29,11 +30,16 @@ type TiptapToTypstOptions = {
   /** Typst function footnoteReference nodes render as — see
    *  template.ts's footnoteStyle. Defaults to Typst's native #footnote. */
   footnoteStyle?: "footnote" | "sidenote";
+  /** The document's own language (template.options.primaryLang — see
+   *  cross-ref-labels.ts), for formatting crossRef display text ("圖 1" vs
+   *  "Figure 1"). Independent of anything UI-locale related. */
+  primaryLang?: string;
 };
 
 // Collector for the current conversion (the CLI runs one conversion at a time).
 let imageSink: ImageAsset[] | null = null;
 let footnoteStyle: "footnote" | "sidenote" = "footnote";
+let primaryLang: string | undefined;
 
 // Maps a footnote's `data-id` to its rendered Typst content, built once per
 // conversion from the trailing `footnotes` node (see tiptapToTypst). Typst's
@@ -42,6 +48,39 @@ let footnoteStyle: "footnote" | "sidenote" = "footnote";
 // reference points at by id) — so references are resolved through this map
 // instead of rendering the footnotes list as a visible block.
 let footnoteMap: Map<string, string> | null = null;
+
+// Every targetId pointed at by at least one crossRef node anywhere in the
+// document, built once per conversion by buildReferencedIds. Mirrors
+// anvilnote-web's cross-ref.ts numbering plugin exactly: figures/tables
+// always get a Typst label+figure wrapper (matching the editor, which
+// numbers every one unconditionally), but a blockMath node only gets
+// wrapped with Typst's own equation numbering enabled when its id appears
+// here — an unreferenced equation stays a bare, unnumbered `$ ... $`,
+// exactly like the editor never shows "(N)" next to one nothing points at.
+let referencedTargetIds: Set<string> | null = null;
+
+function collectReferencedIds(nodes: TiptapNode[], out: Set<string>): void {
+  for (const node of nodes) {
+    if (node.type === "crossRef") {
+      const targetId = node.attrs?.targetId;
+      if (typeof targetId === "string") out.add(targetId);
+    }
+    if (node.content !== undefined) {
+      collectReferencedIds(asNodes(node.content), out);
+    }
+  }
+}
+
+// A stable id (AnvilNote's own crypto.randomUUID, from cross-ref.ts)
+// sanitized into Typst's <name> label syntax. `undefined` when the node
+// has no id at all (documents created before the cross-ref feature shipped
+// never got one backfilled until reopened in the editor) — those targets
+// simply aren't referenceable from a crossRef yet, so no label is emitted
+// for them and rendering proceeds exactly as it did before this feature.
+function typstLabelFor(node: TiptapNode): string | undefined {
+  const id = node.attrs?.id;
+  return typeof id === "string" && id ? sanitizeTypstLabel(id) : undefined;
+}
 
 const IMAGE_MIME_EXT: Record<string, string> = {
   "image/png": "png",
@@ -88,10 +127,20 @@ function renderImage(node: TiptapNode): string {
 
   const widthArg = width != null ? `, width: ${width}%` : "";
   const imageSrc = `image("${filename}"${widthArg})`;
+  const label = typstLabelFor(node);
+  const labelSuffix = label ? ` <${label}>` : "";
+
+  // Always wrapped in #figure — even with no caption (Typst allows omitting
+  // it) — not just when captioned: anvilnote-web's cross-ref.ts numbers
+  // EVERY image node unconditionally, regardless of whether it has a
+  // caption, so Typst's own figure counter (which only increments for
+  // actual #figure elements) has to see every image the same way or a
+  // referenced image's number would drift out of sync with what the
+  // editor showed for it.
   if (!caption) {
-    return `#align(${align})[#${imageSrc}]`;
+    return `#align(${align})[#figure(${imageSrc})${labelSuffix}]`;
   }
-  return `#align(${align})[#figure(${imageSrc}, caption: [${escapeTypstText(caption)}])]`;
+  return `#align(${align})[#figure(${imageSrc}, caption: [${escapeTypstText(caption)}])${labelSuffix}]`;
 }
 
 function asNodes(content: unknown): TiptapNode[] {
@@ -223,6 +272,50 @@ export function inlineToTypst(content: unknown): string {
         // #footnote[], which Typst would still number.
         return inner !== undefined ? `#${footnoteStyle}[${inner}]` : "";
       }
+      if (type === "crossRef") {
+        // Reads the crossRef node's OWN resolvedKind/resolvedValue attrs —
+        // already computed and stored by anvilnote-web's cross-ref.ts
+        // resolver plugin the last time the document was edited/saved —
+        // rather than recomputing "which number is this" here. That keeps
+        // exactly one source of truth for the numbering logic (figures
+        // numbered unconditionally, equations only if referenced, etc.);
+        // duplicating it renderer-side would risk the two drifting apart.
+        //
+        // A plain #link(<label>)[...], not Typst's own @label mechanism:
+        // @ref's automatic supplement+numbering composition doesn't
+        // include the parenthesized equation format ("式 (1)" / "Equation
+        // (1)") this app's design calls for — verified by a real Typst
+        // compile showing `@eq` rendering as "式 1" with the numbering's
+        // own parens silently dropped, not "式 (1)". Manually formatting
+        // resolvedValue via cross-ref-labels.ts and linking to the label
+        // sidesteps that limitation entirely and, as a bonus, keeps this
+        // PDF text identical to what the editor's own NodeView showed.
+        const targetId = node.attrs?.targetId;
+        const broken = Boolean(node.attrs?.broken);
+        const resolvedKind = node.attrs?.resolvedKind;
+        const resolvedValue = node.attrs?.resolvedValue;
+        if (
+          broken ||
+          typeof targetId !== "string" ||
+          typeof resolvedKind !== "string" ||
+          typeof resolvedValue !== "string"
+        ) {
+          // A dangling reference (target deleted) or one from a doc saved
+          // before this feature existed (never resolved, so these attrs
+          // are still null) — degrades to nothing rather than emitting an
+          // unresolvable Typst label reference, which is a compile error,
+          // not a silently-broken link the way a dangling web hyperlink
+          // would be.
+          return "";
+        }
+        const label = sanitizeTypstLabel(targetId);
+        const text = formatCrossRefLabel(
+          resolvedKind as "figure" | "table" | "equation" | "heading",
+          resolvedValue,
+          primaryLang,
+        );
+        return `#link(<${label}>)[${escapeTypstText(text)}]`;
+      }
       return "";
     })
     .join("");
@@ -333,10 +426,18 @@ function renderTable(node: TiptapNode, offset: number): string {
   }
 
   const tableSrc = `table(\n  ${args.join(",\n  ")},\n)`;
-  if (!caption) {
-    return `#align(${align})[\n${indentLines(`#${tableSrc}`, "  ")}\n]`;
-  }
-  const figureSrc = `#figure(\n  ${indentLines(tableSrc, "  ").trimStart()},\n  kind: table,\n  caption: [${escapeTypstText(caption)}],\n)`;
+  const label = typstLabelFor(node);
+  const labelSuffix = label ? ` <${label}>` : "";
+
+  // Always wrapped in #figure(kind: table, ...) — even with no caption —
+  // for the same reason renderImage always wraps in #figure now: the
+  // editor numbers every table node unconditionally (cross-ref.ts), so
+  // Typst's own table-figure counter needs to see every table the same
+  // way, or a referenced table's number would drift out of sync.
+  const figureArgs = caption
+    ? `kind: table,\n  caption: [${escapeTypstText(caption)}],`
+    : "kind: table,";
+  const figureSrc = `#figure(\n  ${indentLines(tableSrc, "  ").trimStart()},\n  ${figureArgs}\n)${labelSuffix}`;
   return `#align(${align})[\n${indentLines(figureSrc, "  ")}\n]`;
 }
 
@@ -351,7 +452,16 @@ function renderBlock(node: TiptapNode, offset: number): string {
         1,
         6,
       );
-      return `${"=".repeat(level)} ${inlineToTypst(node.content)}`.trim();
+      const label = typstLabelFor(node);
+      const labelSuffix = label ? ` <${label}>` : "";
+      // Only a label, never Typst's own heading numbering: a heading
+      // crossRef displays the heading's own TEXT (see cross-ref.ts's
+      // comment on why — most of this app's 18 templates don't number
+      // headings at all, and the couple that do use incompatible
+      // per-template schemes), so nothing here needs to read a number back
+      // from Typst. The label only has to exist for #link(<label>)[...] to
+      // have something to jump to.
+      return `${"=".repeat(level)} ${inlineToTypst(node.content)}${labelSuffix}`.trim();
     }
     case "paragraph":
       return inlineToTypst(node.content);
@@ -391,7 +501,24 @@ function renderBlock(node: TiptapNode, offset: number): string {
       }
       // Display math: surrounding spaces make Typst center it on its own line.
       const { typst, ok } = latexToTypstMath(latex);
-      return ok ? `$ ${typst} $` : `#block(raw("${escapeTypstString(latex)}"))`;
+      if (!ok) return `#block(raw("${escapeTypstString(latex)}"))`;
+
+      const id = node.attrs?.id;
+      const label = typstLabelFor(node);
+      const isReferenced = typeof id === "string" && (referencedTargetIds?.has(id) ?? false);
+
+      if (label && isReferenced) {
+        // math.equation's own `numbering` defaults to none — wrapping
+        // ONLY this equation in a scoped content block (#[ ... ]) with a
+        // local `set` rule turns numbering on for just this one, leaving
+        // every other (unreferenced) equation in the document unnumbered,
+        // exactly matching cross-ref.ts's own rule (only a cross-referenced
+        // equation gets a number at all). The #set's effect is scoped to
+        // its enclosing content block, not global, so it doesn't leak
+        // forward into equations rendered after this one returns.
+        return `#[\n  #set math.equation(numbering: "(1)")\n  $ ${typst} $ <${label}>\n]`;
+      }
+      return `$ ${typst} $`;
     }
     case "horizontalRule":
       return "#line(length: 100%)";
@@ -438,6 +565,7 @@ function buildFootnoteMap(nodes: TiptapNode[], offset: number): Map<string, stri
 export function tiptapToTypst(content: unknown[], opts: TiptapToTypstOptions = {}) {
   imageSink = opts.images ?? null;
   footnoteStyle = opts.footnoteStyle ?? "footnote";
+  primaryLang = opts.primaryLang;
   const offset = opts.headingOffset ?? 0;
   const first = Array.isArray(content) ? content[0] : undefined;
   const nodes =
@@ -445,8 +573,12 @@ export function tiptapToTypst(content: unknown[], opts: TiptapToTypstOptions = {
       ? asNodes((first as TiptapNode).content)
       : asNodes(content);
   footnoteMap = buildFootnoteMap(nodes, offset);
+  referencedTargetIds = new Set();
+  collectReferencedIds(nodes, referencedTargetIds);
   const body = renderBlocks(nodes, offset);
   imageSink = null;
   footnoteMap = null;
+  referencedTargetIds = null;
+  primaryLang = undefined;
   return body;
 }
