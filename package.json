@@ -2,6 +2,7 @@
   "name": "anvilnote-renderer",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "description": "CLI renderer for AnvilNote Typst PDF generation.",
   "scripts": {
     "dev": "tsx src/cli.ts",
