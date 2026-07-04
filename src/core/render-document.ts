@@ -12,15 +12,37 @@ import {
 } from "../converters/tiptap-to-typst";
 import { ensureMathLoaded } from "../converters/latex-to-typst";
 import { loadTemplate } from "./template-loader";
-import { ensureDir } from "../utils/fs";
+import { ensureDir, pathExists } from "../utils/fs";
 import { compileTypst } from "./compile-typst";
 import { buildTypstEntry } from "./build-entry";
 import { shouldIgnoreSystemFonts } from "./font-paths";
 import { resolveFromRendererRoot } from "../utils/path";
 import { FONT_PRESET_VERSION, FONT_BUNDLE, resolveFontChoices } from "../config/fonts";
+import type { LoadedTemplate } from "../types/template";
 
 function pagePreset(pageSize?: "A4" | "Letter") {
   return pageSize === "Letter" ? "us-letter" : "a4";
+}
+
+// `template.dir` is the bundled template tree — read-only once packaged (e.g.
+// under /opt on a Linux .deb install, root-owned). Typst still needs a
+// writable `.work/` scratch dir *inside* its `--root` for relative imports to
+// resolve, so we mirror the template into workDir once (cached by
+// slug+version) and build there instead of inside the read-only original.
+async function ensureWritableTemplateRoot(
+  template: LoadedTemplate,
+  workDir: string,
+): Promise<string> {
+  const dest = path.join(
+    workDir,
+    ".template-root",
+    `${template.manifest.slug}-${template.manifest.version}`,
+  );
+  if (!(await pathExists(dest))) {
+    await ensureDir(path.dirname(dest));
+    await fs.cp(template.dir, dest, { recursive: true });
+  }
+  return dest;
 }
 
 export async function renderDocument(
@@ -63,7 +85,12 @@ export async function renderDocument(
   // The entry file lives in a per-render subdir under the template's `.work/`
   // (must be inside root), and is cleaned up afterwards. A durable copy of the
   // generated source is written to the caller's workDir for retention/debug.
-  const buildDir = path.join(template.dir, ".work", fileStem);
+  //
+  // The root itself is a writable mirror of template.dir (see
+  // ensureWritableTemplateRoot), not the bundled dir directly — that dir is
+  // read-only once packaged, so writing `.work/` into it fails with EACCES.
+  const templateRoot = await ensureWritableTemplateRoot(template, workDir);
+  const buildDir = path.join(templateRoot, ".work", fileStem);
   await ensureDir(buildDir);
 
   // Write decoded inline images next to the entry so Typst's image("…")
@@ -80,12 +107,16 @@ export async function renderDocument(
   const entryPath = path.join(buildDir, "entry.typ");
   const durableTypstPath = path.join(workDir, `${fileStem}.typ`);
 
+  const mirroredAdapterPath = path.join(
+    templateRoot,
+    path.relative(template.dir, template.adapterPath),
+  );
   const adapterRelPath = path
-    .relative(buildDir, template.adapterPath)
+    .relative(buildDir, mirroredAdapterPath)
     .split(path.sep)
     .join("/");
 
-  // Typst restricts file access to within `--root` (= template.dir), so the
+  // Typst restricts file access to within `--root` (= templateRoot), so the
   // shared font policy file (templates/shared/anvil-fonts.typ) is copied next
   // to the entry and imported as "./anvil-fonts.typ".
   const sharedFontsSrc = resolveFromRendererRoot(
@@ -123,7 +154,7 @@ export async function renderDocument(
   try {
     const compileResult = await compileTypst(entryPath, pdfPath, {
       fontPaths: template.fontPaths,
-      root: template.dir,
+      root: templateRoot,
       ignoreSystemFonts: shouldIgnoreSystemFonts(),
     });
 
