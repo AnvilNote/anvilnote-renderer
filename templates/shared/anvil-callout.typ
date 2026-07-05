@@ -83,6 +83,12 @@
 // exported PDF only the "證"/"Proof" label needs that distinct look — the
 // body reads as normal document body text (whatever font the template/
 // document already uses), not a second font switch mid-proof.
+//
+// The label runs directly into the body's own first line — no #block
+// around it, unlike callout's own title (which stays on its own line) —
+// per explicit feedback: the web editor keeps the header/body split
+// (proof-node-view.tsx is unchanged), only the Typst/PDF output should read
+// "證設 x 為任意實數..." as one continuous line instead of two.
 #let proof(body, label: "證") = {
   block(
     width: 100%,
@@ -90,8 +96,7 @@
     above: 1em,
     below: 1em,
   )[
-    #block(below: 0.5em, text(font: _proof-fonts, weight: 600)[#label])
-    #body
+    #text(font: _proof-fonts, weight: 600)[#label]#body
     #align(right)[#box(width: 0.6em, height: 0.6em, fill: black)]
   ]
 }
