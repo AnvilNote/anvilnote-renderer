@@ -97,6 +97,31 @@ const IMAGE_MIME_EXT: Record<string, string> = {
   "application/pdf": "pdf",
 };
 
+// Figure/table captions are a plain string attribute (an <input> in the
+// editor, not ProseMirror content), so lightweight math support there works
+// by convention: $$...$$ segments get converted through the same LaTeX ->
+// Typst math pipeline as everywhere else, and everything outside them is
+// escaped as plain text — matches anvilnote-web's caption-math.ts render
+// path exactly (same delimiter, same "leave a segment that fails to parse
+// as literal escaped text" fallback) so a caption reads the same in the
+// editor and the exported PDF.
+const CAPTION_MATH_PATTERN = /\$\$([^$\n]+?)\$\$/g;
+
+function renderCaptionText(caption: string): string {
+  let out = "";
+  let lastIndex = 0;
+  for (const match of caption.matchAll(CAPTION_MATH_PATTERN)) {
+    const [full, latex] = match;
+    const index = match.index ?? 0;
+    out += escapeTypstText(caption.slice(lastIndex, index));
+    const { typst, ok } = latexToTypstMath(latex);
+    out += ok ? `$${typst}$` : escapeTypstText(full);
+    lastIndex = index + full.length;
+  }
+  out += escapeTypstText(caption.slice(lastIndex));
+  return out;
+}
+
 function renderImage(node: TiptapNode): string {
   const pdfSrc = typeof node.attrs?.pdfSrc === "string" ? node.attrs.pdfSrc : "";
   const src = pdfSrc || (typeof node.attrs?.src === "string" ? node.attrs.src : "");
@@ -140,7 +165,7 @@ function renderImage(node: TiptapNode): string {
   if (!caption) {
     return `#align(${align})[#figure(${imageSrc})${labelSuffix}]`;
   }
-  return `#align(${align})[#figure(${imageSrc}, caption: [${escapeTypstText(caption)}])${labelSuffix}]`;
+  return `#align(${align})[#figure(${imageSrc}, caption: [${renderCaptionText(caption)}])${labelSuffix}]`;
 }
 
 function asNodes(content: unknown): TiptapNode[] {
@@ -435,7 +460,7 @@ function renderTable(node: TiptapNode, offset: number): string {
   // Typst's own table-figure counter needs to see every table the same
   // way, or a referenced table's number would drift out of sync.
   const figureArgs = caption
-    ? `kind: table,\n  caption: [${escapeTypstText(caption)}],`
+    ? `kind: table,\n  caption: [${renderCaptionText(caption)}],`
     : "kind: table,";
   const figureSrc = `#figure(\n  ${indentLines(tableSrc, "  ").trimStart()},\n  ${figureArgs}\n)${labelSuffix}`;
   return `#align(${align})[\n${indentLines(figureSrc, "  ")}\n]`;
