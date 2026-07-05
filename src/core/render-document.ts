@@ -66,16 +66,16 @@ export async function renderDocument(
   // Legacy BlockNote documents (a flat block array) still convert via the old
   // path so previously stored notes keep rendering.
   const images: ImageAsset[] = [];
-  const body = isTiptapContent(input.document.content)
+  const { body, usesMermaid, usesSubpar } = isTiptapContent(input.document.content)
     ? tiptapToTypst(input.document.content, {
         headingOffset: template.manifest.headingOffset,
         images,
         footnoteStyle: template.manifest.footnoteStyle,
         primaryLang: fonts.primaryLang,
       })
-    : blocknoteToTypst(input.document.content, {
+    : { body: blocknoteToTypst(input.document.content, {
         headingOffset: template.manifest.headingOffset,
-      });
+      }), usesMermaid: false, usesSubpar: false };
 
   const fileStem = `${input.document.id}-${randomUUID()}`;
   const pdfPath = path.join(outputDir, `${fileStem}.pdf`);
@@ -146,6 +146,8 @@ export async function renderDocument(
     meta: input.template.meta,
     options: input.template.options,
     body,
+    usesMermaid,
+    usesSubpar,
     pagePreset: pagePreset(input.options?.pageSize),
   });
 

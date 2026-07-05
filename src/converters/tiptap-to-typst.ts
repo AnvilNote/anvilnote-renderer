@@ -4,6 +4,7 @@ import { escapeTypstString, escapeTypstText, sanitizeTypstLabel } from "../utils
 import { normalizeCalloutKind } from "../config/callouts";
 import { proofLabel } from "../config/proof-labels";
 import { formatCrossRefLabel } from "../config/cross-ref-labels";
+import { normalizeMermaidTheme, resolveMermaidThemeArgs } from "../config/mermaid-themes";
 
 // Converts a Tiptap document (the canonical anvilnote-web source format) to
 // Typst markup. The web app stores content wrapped as a single-element array
@@ -41,6 +42,14 @@ type TiptapToTypstOptions = {
 let imageSink: ImageAsset[] | null = null;
 let footnoteStyle: "footnote" | "sidenote" = "footnote";
 let primaryLang: string | undefined;
+// Set when a mermaid node is actually rendered — build-entry.ts only adds
+// the @preview/merman import when true, so a document with no mermaid
+// blocks doesn't depend on that package (and its offline cache) being
+// present at all.
+let usedMermaid = false;
+// Same reasoning as usedMermaid above, for @preview/subpar (side-by-side
+// image rows) instead of @preview/merman.
+let usedSubpar = false;
 
 // Maps a footnote's `data-id` to its rendered Typst content, built once per
 // conversion from the trailing `footnotes` node (see tiptapToTypst). Typst's
@@ -167,6 +176,73 @@ function renderImage(node: TiptapNode): string {
     return `#align(${align})[#figure(${imageSrc})${labelSuffix}]`;
   }
   return `#align(${align})[#figure(${imageSrc}, caption: [${renderCaptionText(caption)}])${labelSuffix}]`;
+}
+
+// Shared core between renderImage (top-level, wrapped in #align, label
+// inline via "figure(...) <label>") and imageRow's own case below, which
+// needs the figure() call and its label as SEPARATE comma-joined
+// positional arguments instead (subpar.grid's own required shape — see
+// its README: "figure(...), <a>," not "figure(...) <a>"). Returns the bare
+// figure() source with no label attached; the caller decides how to join
+// it with a label depending on which shape it needs. Returns null if the
+// image can't be embedded (unsupported/missing data URL), same silent-skip
+// behavior as renderImage itself.
+function renderImageFigureCore(node: TiptapNode): string | null {
+  const pdfSrc = typeof node.attrs?.pdfSrc === "string" ? node.attrs.pdfSrc : "";
+  const src = pdfSrc || (typeof node.attrs?.src === "string" ? node.attrs.src : "");
+  if (!src) return null;
+
+  const width = typeof node.attrs?.width === "number" ? node.attrs.width : null;
+  const caption = typeof node.attrs?.caption === "string" ? node.attrs.caption.trim() : "";
+
+  const match = src.match(/^data:(image\/[a-z0-9.+-]+|application\/pdf);base64,(.+)$/i);
+  if (!match || !imageSink) return null;
+
+  const ext = IMAGE_MIME_EXT[match[1].toLowerCase()];
+  if (!ext) return null;
+  const filename = `image-${imageSink.length}.${ext}`;
+  imageSink.push({ filename, base64: match[2] });
+
+  const widthArg = width != null ? `, width: ${width}%` : "";
+  const imageSrc = `image("${filename}"${widthArg})`;
+
+  if (!caption) {
+    return `figure(${imageSrc})`;
+  }
+  return `figure(${imageSrc}, caption: [${renderCaptionText(caption)}])`;
+}
+
+// Side-by-side subfigures via the bundled @preview/subpar package — pure
+// layout only. Its own (a)/(b) numbering and cross-ref display text are
+// NOT used for AnvilNote's actual cross-references: "圖 1 (a)"/"圖 1 (b)"
+// is computed entirely in cross-ref.ts's numbering pass and linked via the
+// ordinary #link(<label>)[text] pattern every other crossRef target uses
+// (same reasoning as equations' "式 (1)" format needing the same
+// workaround — Typst's own numbering composition can't produce that
+// shape). subpar.grid still requires a label per child as a SEPARATE
+// comma-joined positional argument (its README: "figure(...), <a>," not
+// "figure(...) <a>") purely so its (a)/(b) letters render at all — reusing
+// each child's own typstLabelFor id here means that same label also
+// serves as the #link target, no separate/unused label needed. A child
+// missing an id (pre-cross-ref-feature document never reopened in the
+// editor to backfill one) gets a throwaway per-position label instead, so
+// subpar's positional-argument pairing never shifts out of alignment.
+function renderImageRow(node: TiptapNode): string {
+  const children = asNodes(node.content).filter((child) => child.type === "image");
+  const parts: string[] = [];
+  children.forEach((child, index) => {
+    const figureCore = renderImageFigureCore(child);
+    if (!figureCore) return;
+    const label = typstLabelFor(child) ?? `image-row-fallback-${index}`;
+    parts.push(figureCore, `<${label}>`);
+  });
+  if (parts.length === 0) return "";
+
+  const columns = `(1fr,) * ${children.length}`;
+  const rowLabel = typstLabelFor(node);
+  const labelArg = rowLabel ? `,\n  label: <${rowLabel}>` : "";
+  const gridArgs = [...parts, `columns: ${columns}`].join(",\n  ");
+  return `#align(center)[#subpar.grid(\n  ${gridArgs}${labelArg},\n)]`;
 }
 
 function asNodes(content: unknown): TiptapNode[] {
@@ -336,7 +412,7 @@ export function inlineToTypst(content: unknown): string {
         }
         const label = sanitizeTypstLabel(targetId);
         const text = formatCrossRefLabel(
-          resolvedKind as "figure" | "table" | "equation" | "heading",
+          resolvedKind as "figure" | "figureSub" | "table" | "equation" | "heading",
           resolvedValue,
           primaryLang,
         );
@@ -532,6 +608,34 @@ function renderBlock(node: TiptapNode, offset: number): string {
       const label = proofLabel(primaryLang);
       return `#proof(label: [${escapeTypstText(label)}])[${inner}]`;
     }
+    case "mermaid": {
+      const source = typeof node.attrs?.source === "string" ? node.attrs.source : "";
+      if (!source.trim()) return "";
+      usedMermaid = true;
+      const theme = normalizeMermaidTheme(node.attrs?.theme);
+      const primaryColor =
+        typeof node.attrs?.primaryColor === "string" ? node.attrs.primaryColor : null;
+      const { themeName, themeVariables } = resolveMermaidThemeArgs(theme, primaryColor);
+      const width = typeof node.attrs?.width === "number" ? node.attrs.width : null;
+
+      const args = [`theme-name: "${themeName}"`];
+      if (themeVariables) {
+        const entries = Object.entries(themeVariables)
+          .map(([key, value]) => `${key}: "${value}"`)
+          .join(", ");
+        args.push(`theme: (${entries})`);
+      }
+      if (width != null) {
+        args.push(`width: ${width}%`);
+      }
+
+      const raw = createTypstRawBlock(source, null);
+      return `#align(center)[#mermaid(${raw}.text, ${args.join(", ")})]`;
+    }
+    case "imageRow": {
+      usedSubpar = true;
+      return renderImageRow(node);
+    }
     case "codeBlock": {
       // Typst raw block with a safe fence; the language tag drives Typst's
       // native syntax highlighting.
@@ -623,10 +727,16 @@ export function tiptapToTypst(content: unknown[], opts: TiptapToTypstOptions = {
   footnoteMap = buildFootnoteMap(nodes, offset);
   referencedTargetIds = new Set();
   collectReferencedIds(nodes, referencedTargetIds);
+  usedMermaid = false;
+  usedSubpar = false;
   const body = renderBlocks(nodes, offset);
+  const usesMermaid = usedMermaid;
+  const usesSubpar = usedSubpar;
   imageSink = null;
   footnoteMap = null;
   referencedTargetIds = null;
   primaryLang = undefined;
-  return body;
+  usedMermaid = false;
+  usedSubpar = false;
+  return { body, usesMermaid, usesSubpar };
 }
