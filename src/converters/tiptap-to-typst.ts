@@ -344,7 +344,24 @@ export function inlineToTypst(content: unknown): string {
       }
       return "";
     })
-    .join("");
+    .reduce((joined, part) => joined + joinInlineTypstParts(joined, part), "");
+}
+
+// A markup-mode expression call ending in `]` (#strong[...], #link(...)[...],
+// crossRef's #link[...], etc.) directly followed by literal text starting
+// with "(" is a Typst parser trap: it reads the "(" as the start of that
+// same expression's argument list rather than as plain text — confirmed via
+// a real `typst compile` on `#strong[有界函數 ](bounded function)`, which
+// fails with "error: expected comma" (Typst tries to parse "bounded
+// function" as call arguments). This is exactly the "bold term (English
+// gloss)" pattern common in bilingual notes, so it's a real user-facing
+// crash, not a contrived case. A U+200B zero-width space between the two
+// breaks the parse without changing anything visible in the PDF.
+function joinInlineTypstParts(previous: string, next: string): string {
+  if (previous.endsWith("]") && next.startsWith("(")) {
+    return "\u200b" + next;
+  }
+  return next;
 }
 
 // --- blocks -----------------------------------------------------------------
