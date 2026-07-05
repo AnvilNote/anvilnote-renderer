@@ -97,7 +97,7 @@ export function buildTypstEntry(input: BuildTypstEntryInput): string {
 
   const lines = [
     `#import "${input.sharedFontsRelPath}": ${usesAnvilFontWrapper ? "apply-anvil-fonts, " : ""}anvil-font-stacks`,
-    `#import "${input.sharedCalloutsRelPath}": callout`,
+    `#import "${input.sharedCalloutsRelPath}": callout, proof`,
     `#import "${input.adapterRelPath}": ${adapterSymbols}`,
     ``,
   ];

@@ -2,6 +2,7 @@ import { latexToTypstMath } from "./latex-to-typst";
 import { createTypstRawBlock } from "./code-block";
 import { escapeTypstString, escapeTypstText, sanitizeTypstLabel } from "../utils/escape-typst";
 import { normalizeCalloutKind } from "../config/callouts";
+import { proofLabel } from "../config/proof-labels";
 import { formatCrossRefLabel } from "../config/cross-ref-labels";
 
 // Converts a Tiptap document (the canonical anvilnote-web source format) to
@@ -508,6 +509,11 @@ function renderBlock(node: TiptapNode, offset: number): string {
       const titleArg = title ? `title: [${escapeTypstText(title)}]` : "title: none";
       const inner = renderBlocks(asNodes(node.content), offset);
       return `#callout(kind: "${kind}", ${titleArg})[${inner}]`;
+    }
+    case "proof": {
+      const inner = renderBlocks(asNodes(node.content), offset);
+      const label = proofLabel(primaryLang);
+      return `#proof(label: [${escapeTypstText(label)}])[${inner}]`;
     }
     case "codeBlock": {
       // Typst raw block with a safe fence; the language tag drives Typst's

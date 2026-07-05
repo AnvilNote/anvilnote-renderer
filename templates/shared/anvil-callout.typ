@@ -9,6 +9,21 @@
 // tinted background, and title text alone.
 #import "./anvil-fonts.typ": title-fonts
 
+// Proof block's own fixed font stack — deliberately NOT title-fonts: that
+// list puts TaiwanPearl before 思源黑體 TW, so a CJK document would render
+// with TaiwanPearl (Typst picks the first font in the list that covers a
+// given character, not "prefer Source Han"). Proof's header/body are meant
+// to always read as Source Han Sans for CJK regardless of the document's
+// own title-face choice — see anvilnote-web's proof.ts doc comment for why.
+#let _proof-fonts = (
+  "Roboto",
+  "思源黑體 TW",
+  "Noto Sans",
+  "Noto Sans JP",
+  "Noto Sans KR",
+  "Noto Sans Thai",
+)
+
 #let _callout-palette = (
   note: (accent: "#448AFF", background: "#E5ECF8"),
   abstract: (accent: "#00B0FF", background: "#DEF0F8"),
@@ -50,5 +65,33 @@
       ]
     }
     #body
+  ]
+}
+
+// Proof block: no border in the PDF (unlike the web editor's own bordered
+// box — see proof-node-view.tsx's CSS — the editor needs a visible boundary
+// to mark an otherwise-plain block in a busy UI; a printed page doesn't) —
+// just a fixed sans-serif label (localized "證明"/"Proof"/etc., resolved by
+// the caller per the document's own primaryLang — see cross-ref-labels.ts's
+// own per-language pattern for why that's resolved outside Typst, not in
+// here) and a solid black QED square pinned bottom-right. The square is
+// drawn with #box+fill, not a Unicode glyph (■) — sidesteps relying on
+// every bundled font actually having that codepoint.
+//
+// _proof-fonts applies to the label only, not body: the editor's own proof
+// block shows both header and body in the fixed sans stack, but in the
+// exported PDF only the "證"/"Proof" label needs that distinct look — the
+// body reads as normal document body text (whatever font the template/
+// document already uses), not a second font switch mid-proof.
+#let proof(body, label: "證") = {
+  block(
+    width: 100%,
+    breakable: true,
+    above: 1em,
+    below: 1em,
+  )[
+    #block(below: 0.5em, text(font: _proof-fonts, weight: 600)[#label])
+    #body
+    #align(right)[#box(width: 0.6em, height: 0.6em, fill: black)]
   ]
 }
