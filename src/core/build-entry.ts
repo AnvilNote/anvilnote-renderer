@@ -58,6 +58,14 @@ export type BuildTypstEntryInput = {
   meta: Record<string, FieldValue>;
   options: Record<string, FieldValue>;
   body: string;
+  /** Whether `body` contains a #mermaid(...) call — only then is
+   *  @preview/merman imported, so a document with no mermaid blocks doesn't
+   *  depend on that package (and its offline cache, see anvilnote-desktop's
+   *  TYPST_PACKAGE_CACHE_PATH wiring) being present at all. */
+  usesMermaid?: boolean;
+  /** Same reasoning as usesMermaid above, for @preview/subpar (side-by-side
+   *  image rows / imageRow). */
+  usesSubpar?: boolean;
   /** Global page paper baseline; adapters may override via their own set page. */
   pagePreset?: string;
 };
@@ -98,6 +106,8 @@ export function buildTypstEntry(input: BuildTypstEntryInput): string {
   const lines = [
     `#import "${input.sharedFontsRelPath}": ${usesAnvilFontWrapper ? "apply-anvil-fonts, " : ""}anvil-font-stacks`,
     `#import "${input.sharedCalloutsRelPath}": callout, proof`,
+    ...(input.usesMermaid ? [`#import "@preview/merman:0.1.0": mermaid`] : []),
+    ...(input.usesSubpar ? [`#import "@preview/subpar:0.2.2"`] : []),
     `#import "${input.adapterRelPath}": ${adapterSymbols}`,
     ``,
   ];
