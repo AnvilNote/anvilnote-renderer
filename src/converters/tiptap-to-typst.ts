@@ -3,7 +3,7 @@ import { createTypstRawBlock } from "./code-block";
 import { escapeTypstString, escapeTypstText, sanitizeTypstLabel } from "../utils/escape-typst";
 import { normalizeCalloutKind } from "../config/callouts";
 import { proofLabel } from "../config/proof-labels";
-import { formatCrossRefLabel } from "../config/cross-ref-labels";
+import { formatCrossRefLabel, getFigureSupplement } from "../config/cross-ref-labels";
 import { normalizeMermaidTheme, resolveMermaidThemeArgs } from "../config/mermaid-themes";
 
 // Converts a Tiptap document (the canonical anvilnote-web source format) to
@@ -241,8 +241,18 @@ function renderImageRow(node: TiptapNode): string {
   const columns = `(1fr,) * ${children.length}`;
   const rowLabel = typstLabelFor(node);
   const labelArg = rowLabel ? `,\n  label: <${rowLabel}>` : "";
+  const supplementArg = `,\n  supplement: [${getFigureSupplement(primaryLang)}]`;
+  // Shared caption for the WHOLE row, on top of each child's own — omitted
+  // entirely (not an empty `caption: []`) when blank, same "no caption
+  // text -> no caption line at all" convention as a plain standalone image
+  // (renderImage above) and each subfigure's own caption. subpar.grid
+  // wraps everything in an ordinary Typst #figure, whose caption is
+  // center-aligned by Typst's own default figure styling — no extra
+  // #align needed for it specifically.
+  const rowCaption = typeof node.attrs?.caption === "string" ? node.attrs.caption.trim() : "";
+  const captionArg = rowCaption ? `,\n  caption: [${renderCaptionText(rowCaption)}]` : "";
   const gridArgs = [...parts, `columns: ${columns}`].join(",\n  ");
-  return `#align(center)[#subpar.grid(\n  ${gridArgs}${labelArg},\n)]`;
+  return `#align(center)[#subpar.grid(\n  ${gridArgs}${captionArg}${supplementArg}${labelArg},\n)]`;
 }
 
 function asNodes(content: unknown): TiptapNode[] {

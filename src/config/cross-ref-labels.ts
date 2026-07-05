@@ -40,6 +40,20 @@ function normalizePrimaryLang(value: string | undefined): CrossRefPrimaryLang {
 // label in the editor's @ suggestion list — resolvedValue is always the
 // plain sequence number regardless, confirmed directly with the user
 // (a named equation's crossRef still shows "式 (1)", not the name).
+// subpar.grid()'s own outer #figure explicitly passes a `supplement:` value
+// it computes itself (via its own i18n helper, keyed off Typst's text.lang
+// — not this document's own primaryLang) — that explicit argument silently
+// wins over anvilnote-renderer's own template-level
+// `show figure.where(kind: image): set figure(supplement: [圖])` rule (a
+// `set` rule only ever supplies a DEFAULT, and loses to any value already
+// passed explicitly), so an unadorned subpar.grid(...) call rendered its
+// caption as "Figure 1 ..." even in an all-Chinese document. Fixing this
+// means passing this SAME supplement text explicitly as subpar.grid's own
+// `supplement:` argument — see tiptap-to-typst.ts's renderImageRow.
+export function getFigureSupplement(primaryLang: string | undefined): string {
+  return SUPPLEMENTS[normalizePrimaryLang(primaryLang)].figure;
+}
+
 export function formatCrossRefLabel(
   kind: "figure" | "figureSub" | "table" | "equation" | "heading",
   value: string,
