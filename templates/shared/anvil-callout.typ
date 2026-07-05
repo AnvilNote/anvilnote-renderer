@@ -59,7 +59,20 @@
     below: 1em,
   )[
     #if title != none and title != [] {
-      block(below: 0.5em)[
+      // sticky: false — Typst's block() defaults sticky to true, which
+      // glues this title to whatever comes right after it as a single
+      // unbreakable unit for pagination purposes. That's exactly what a
+      // heading wants (never end a page on a lone heading), but here it
+      // meant: when the callout's body contained a long block equation
+      // that didn't fit in the page's remaining space, Typst pushed the
+      // WHOLE glued unit — title AND the body content before that
+      // equation — to the next page, while this outer breakable block's
+      // fragment on the current page still got laid out and painted its
+      // background across the remaining space, empty. Confirmed via a
+      // side-by-side Typst compile: identical setup, only this sticky
+      // value changed, same empty-background-then-content-on-next-page
+      // reproduced with sticky left at its default and gone once false.
+      block(below: 0.5em, sticky: false)[
         #set text(font: title-fonts, weight: "bold", fill: accent)
         #title
       ]
