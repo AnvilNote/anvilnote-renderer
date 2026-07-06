@@ -694,6 +694,15 @@ function renderBlock(node: TiptapNode, offset: number): string {
       const dataUrl = `data:image/svg+xml;base64,${Buffer.from(svg, "utf8").toString("base64")}`;
       return renderImage({ ...node, attrs: { ...node.attrs, src: dataUrl } });
     }
+    case "statsChart": {
+      const svg = typeof node.attrs?.svg === "string" ? node.attrs.svg : "";
+      if (!svg.trim()) return "";
+      // Same cached-SVG embedding path as functionPlot above — the SVG was
+      // already fully rendered client-side (see anvilnote-web's
+      // stats-chart-dialog.tsx).
+      const dataUrl = `data:image/svg+xml;base64,${Buffer.from(svg, "utf8").toString("base64")}`;
+      return renderImage({ ...node, attrs: { ...node.attrs, src: dataUrl } });
+    }
     case "image":
       return renderImage(node);
     case "table":
