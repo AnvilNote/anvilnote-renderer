@@ -684,6 +684,16 @@ function renderBlock(node: TiptapNode, offset: number): string {
     }
     case "horizontalRule":
       return "#line(length: 100%)";
+    case "functionPlot": {
+      const svg = typeof node.attrs?.svg === "string" ? node.attrs.svg : "";
+      if (!svg.trim()) return "";
+      // Reuses the exact same embedding path as a regular image node — the
+      // cached SVG was already fully rendered client-side (see
+      // anvilnote-web's function-plot-dialog.tsx); no new Typst logic needed
+      // here, matching the spec's "renderer 零新增邏輯" decision.
+      const dataUrl = `data:image/svg+xml;base64,${Buffer.from(svg, "utf8").toString("base64")}`;
+      return renderImage({ ...node, attrs: { ...node.attrs, src: dataUrl } });
+    }
     case "image":
       return renderImage(node);
     case "table":
