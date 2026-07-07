@@ -91,6 +91,16 @@ const RAW_BLOCK_STYLE = [
 // reads as a proper superscript across every template.
 const FOOTNOTE_STYLE = [`#show footnote: set text(baseline: -0.3em)`].join("\n");
 
+// tiptap-to-typst.ts's blockquote case always emits `#quote(block: true,
+// quotes: true, ...)` — `block: true` is required for Typst's own
+// `attribution` parameter to render at all (confirmed via a real compile:
+// with `quotes: true` alone, a passed `attribution` is silently dropped),
+// but block quotes default to an indented layout, which isn't wanted here.
+// Zeroing the horizontal pad here, once, keeps every blockquote in every
+// template un-indented without needing to repeat this show rule at each
+// call site.
+const QUOTE_STYLE = [`#show quote.where(block: true): set pad(x: 0pt)`].join("\n");
+
 /**
  * Build the Typst entry file. The renderer recognizes one contract for every
  * template — `anvil-template(meta, options, body)` — and lets each adapter
@@ -154,6 +164,8 @@ export function buildTypstEntry(input: BuildTypstEntryInput): string {
     RAW_BLOCK_STYLE,
     ``,
     FOOTNOTE_STYLE,
+    ``,
+    QUOTE_STYLE,
     ``,
     input.body,
     ``,

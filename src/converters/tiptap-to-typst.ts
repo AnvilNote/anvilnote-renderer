@@ -679,14 +679,25 @@ function renderBlock(node: TiptapNode, offset: number): string {
       insideBlockquote = true;
       const inner = renderBlocks(asNodes(node.content), offset);
       insideBlockquote = wasInsideBlockquote;
-      // quotes: true (not block: true) — confirmed via real compile: block:
-      // true indents but does NOT auto-wrap in quotation marks; the default/
-      // quotes:true form doesn't indent and wraps the ENTIRE quoted passage
-      // in one opening/closing " " pair (even across multiple paragraphs),
-      // which is the actual requested look — a single pair of quote marks
-      // bookending the whole quote, not indentation, and not quote marks
-      // only around substrings the user happened to type "" around.
-      return inner ? `#quote(quotes: true)[${inner}]` : "";
+      if (!inner) return "";
+
+      // author (a person) renders in the plain body font; source (a book/
+      // work title) renders in italic — an explicit distinction, not script-
+      // split like the quote's own content above (attribution is metadata,
+      // not quoted prose, and is expected to be short/single-language).
+      const author = typeof node.attrs?.author === "string" ? node.attrs.author.trim() : "";
+      const source = typeof node.attrs?.source === "string" ? node.attrs.source.trim() : "";
+      const authorPart = author ? escapeTypstText(author) : "";
+      const sourcePart = source ? `#emph[${escapeTypstText(source)}]` : "";
+      const attribution = [authorPart, sourcePart].filter(Boolean).join(", ");
+
+      // block: true is required for Typst's own `attribution:` parameter to
+      // render at all (confirmed via a real compile — with quotes: true
+      // alone, a passed attribution is silently dropped); block quotes
+      // default to an indented layout, so build-entry.ts's QUOTE_STYLE show
+      // rule zeroes that padding globally rather than repeating it here.
+      const attributionArg = attribution ? `, attribution: [${attribution}]` : "";
+      return `#quote(block: true, quotes: true${attributionArg})[${inner}]`;
     }
     case "callout": {
       const kind = normalizeCalloutKind(
