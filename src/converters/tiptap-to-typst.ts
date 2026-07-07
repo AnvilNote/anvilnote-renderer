@@ -698,7 +698,7 @@ function renderBlock(node: TiptapNode, offset: number): string {
       const sourcePart = sourceMark ? `#emph[${sourceMark}]` : "";
       // "·" (middle dot), not ", " — per explicit feedback matching the
       // "作者·書名" attribution convention.
-      const attribution = [authorPart, sourcePart].filter(Boolean).join("#h(0.3em)·#h(0.3em)");
+      const attribution = [authorPart, sourcePart].filter(Boolean).join("#h(0.1em)·#h(0.1em)");
 
       // block: true is required for Typst's own `attribution:` parameter to
       // even be read (build-entry.ts's QUOTE_STYLE show rule then discards
