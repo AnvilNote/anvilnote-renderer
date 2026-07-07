@@ -92,14 +92,30 @@ const RAW_BLOCK_STYLE = [
 const FOOTNOTE_STYLE = [`#show footnote: set text(baseline: -0.3em)`].join("\n");
 
 // tiptap-to-typst.ts's blockquote case always emits `#quote(block: true,
-// quotes: true, ...)` — `block: true` is required for Typst's own
-// `attribution` parameter to render at all (confirmed via a real compile:
-// with `quotes: true` alone, a passed `attribution` is silently dropped),
-// but block quotes default to an indented layout, which isn't wanted here.
-// Zeroing the horizontal pad here, once, keeps every blockquote in every
-// template un-indented without needing to repeat this show rule at each
-// call site.
-const QUOTE_STYLE = [`#show quote.where(block: true): set pad(x: 0pt)`].join("\n");
+// attribution: ...)[...]` (quotes: true is NOT used — the quoted passage
+// itself no longer gets a "" wrapper, per explicit feedback reversing an
+// earlier decision). Two overrides, both scoped to block quotes only:
+//   1. Zero horizontal pad — block: true (needed for the attribution param
+//      to render at all; confirmed via a real compile that quotes: true
+//      alone silently drops a passed attribution) defaults to an indented
+//      layout, which isn't wanted here.
+//   2. Fully replace the built-in attribution rendering. Typst's own
+//      quote() unconditionally prepends a single "—" before whatever
+//      `attribution:` content is passed — confirmed via a real compile
+//      that passing "—— Mark Twain" as the attribution renders "— ——
+//      Mark Twain" (the built-in dash PLUS the caller's own). The desired
+//      look is a Chinese-style double em-dash "——" and nothing else, so
+//      the built-in mechanism is bypassed entirely: this show rule reads
+//      `it.body`/`it.attribution` directly and renders the dash itself.
+const QUOTE_STYLE = [
+  `#show quote.where(block: true): set pad(x: 0pt)`,
+  `#show quote.where(block: true): it => {`,
+  `  it.body`,
+  `  if it.attribution != none {`,
+  `    align(right)[——#h(0.2em)#it.attribution]`,
+  `  }`,
+  `}`,
+].join("\n");
 
 /**
  * Build the Typst entry file. The renderer recognizes one contract for every
