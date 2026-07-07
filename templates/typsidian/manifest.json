@@ -9,9 +9,18 @@
     "entry": "template.typ"
   },
   "category": "note",
-  "tags": ["note", "obsidian", "callouts"],
-  "fonts": ["Fira Sans", "Fira Code", "New Computer Modern Math"],
+  "tags": [
+    "note",
+    "obsidian",
+    "callouts"
+  ],
+  "fonts": [
+    "Fira Sans",
+    "Fira Code",
+    "New Computer Modern Math"
+  ],
   "headingOffset": 0,
+  "textWidthCm": 17.53,
   "fields": [
     {
       "key": "title",
@@ -42,7 +51,10 @@
       "scope": "option",
       "required": false,
       "default": "light",
-      "options": ["light", "dark"]
+      "options": [
+        "light",
+        "dark"
+      ]
     },
     {
       "key": "mathMode",
@@ -51,7 +63,10 @@
       "scope": "option",
       "required": false,
       "default": "default",
-      "options": ["default", "garamond"]
+      "options": [
+        "default",
+        "garamond"
+      ]
     },
     {
       "key": "primaryLang",
@@ -60,7 +75,13 @@
       "scope": "option",
       "required": false,
       "default": "zh",
-      "options": ["zh", "en", "ja", "ko", "th"]
+      "options": [
+        "zh",
+        "en",
+        "ja",
+        "ko",
+        "th"
+      ]
     },
     {
       "key": "titleFont",
@@ -69,7 +90,10 @@
       "scope": "option",
       "required": false,
       "default": "taiwan-pearl",
-      "options": ["taiwan-pearl", "source-han"]
+      "options": [
+        "taiwan-pearl",
+        "source-han"
+      ]
     },
     {
       "key": "bodyFont",
@@ -78,7 +102,10 @@
       "scope": "option",
       "required": false,
       "default": "song",
-      "options": ["song", "kai"]
+      "options": [
+        "song",
+        "kai"
+      ]
     },
     {
       "key": "dateFont",
@@ -87,7 +114,10 @@
       "scope": "option",
       "required": false,
       "default": "playfair",
-      "options": ["playfair", "tai-heritage"]
+      "options": [
+        "playfair",
+        "tai-heritage"
+      ]
     }
   ],
   "usesAnvilFontWrapper": true,

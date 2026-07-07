@@ -9,9 +9,18 @@
     "entry": "template.typ"
   },
   "category": "report",
-  "tags": ["report", "cover", "clean"],
-  "fonts": ["Source Serif 4", "Source Sans 3", "Source Code Pro"],
+  "tags": [
+    "report",
+    "cover",
+    "clean"
+  ],
+  "fonts": [
+    "Source Serif 4",
+    "Source Sans 3",
+    "Source Code Pro"
+  ],
   "headingOffset": 0,
+  "textWidthCm": 14.21,
   "fields": [
     {
       "key": "title",
@@ -58,7 +67,10 @@
       "scope": "option",
       "required": false,
       "default": "a4",
-      "options": ["a4", "us-letter"]
+      "options": [
+        "a4",
+        "us-letter"
+      ]
     },
     {
       "key": "accentColor",
@@ -75,7 +87,10 @@
       "scope": "option",
       "required": false,
       "default": "default",
-      "options": ["default", "garamond"]
+      "options": [
+        "default",
+        "garamond"
+      ]
     },
     {
       "key": "primaryLang",
@@ -84,7 +99,13 @@
       "scope": "option",
       "required": false,
       "default": "zh",
-      "options": ["zh", "en", "ja", "ko", "th"]
+      "options": [
+        "zh",
+        "en",
+        "ja",
+        "ko",
+        "th"
+      ]
     },
     {
       "key": "titleFont",
@@ -93,7 +114,10 @@
       "scope": "option",
       "required": false,
       "default": "taiwan-pearl",
-      "options": ["taiwan-pearl", "source-han"]
+      "options": [
+        "taiwan-pearl",
+        "source-han"
+      ]
     },
     {
       "key": "bodyFont",
@@ -102,7 +126,10 @@
       "scope": "option",
       "required": false,
       "default": "song",
-      "options": ["song", "kai"]
+      "options": [
+        "song",
+        "kai"
+      ]
     },
     {
       "key": "dateFont",
@@ -111,7 +138,10 @@
       "scope": "option",
       "required": false,
       "default": "playfair",
-      "options": ["playfair", "tai-heritage"]
+      "options": [
+        "playfair",
+        "tai-heritage"
+      ]
     }
   ],
   "usesAnvilFontWrapper": true,

@@ -20,6 +20,7 @@
     "DejaVu Sans Mono"
   ],
   "headingOffset": 0,
+  "textWidthCm": 16,
   "fields": [
     {
       "key": "title",

@@ -20,6 +20,7 @@
     "Hack"
   ],
   "headingOffset": 0,
+  "textWidthCm": 16,
   "fields": [
     {
       "key": "title",
