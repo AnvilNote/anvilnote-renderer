@@ -681,23 +681,33 @@ function renderBlock(node: TiptapNode, offset: number): string {
       insideBlockquote = wasInsideBlockquote;
       if (!inner) return "";
 
-      // author (a person) renders in the plain body font; source (a book/
-      // work title) renders in italic — an explicit distinction, not script-
-      // split like the quote's own content above (attribution is metadata,
-      // not quoted prose, and is expected to be short/single-language).
+      // author (a person) renders plain; source (a book/work title) renders
+      // in italic AND wrapped in a title mark — 《...》 (Chinese book-title
+      // marks) if the title contains any CJK character, otherwise a smart-
+      // quoted "..." — an explicit distinction, not script-split like the
+      // quote's own content above (attribution is metadata, not quoted
+      // prose, and is expected to be short/single-language).
       const author = typeof node.attrs?.author === "string" ? node.attrs.author.trim() : "";
       const source = typeof node.attrs?.source === "string" ? node.attrs.source.trim() : "";
       const authorPart = author ? escapeTypstText(author) : "";
-      const sourcePart = source ? `#emph[${escapeTypstText(source)}]` : "";
-      const attribution = [authorPart, sourcePart].filter(Boolean).join(", ");
+      const sourceMark = source
+        ? CJK_PATTERN.test(source)
+          ? `《${escapeTypstText(source)}》`
+          : `"${escapeTypstText(source)}"`
+        : "";
+      const sourcePart = sourceMark ? `#emph[${sourceMark}]` : "";
+      // "·" (middle dot), not ", " — per explicit feedback matching the
+      // "作者·書名" attribution convention.
+      const attribution = [authorPart, sourcePart].filter(Boolean).join("#h(0.3em)·#h(0.3em)");
 
       // block: true is required for Typst's own `attribution:` parameter to
-      // render at all (confirmed via a real compile — with quotes: true
-      // alone, a passed attribution is silently dropped); block quotes
-      // default to an indented layout, so build-entry.ts's QUOTE_STYLE show
-      // rule zeroes that padding globally rather than repeating it here.
+      // even be read (build-entry.ts's QUOTE_STYLE show rule then discards
+      // Typst's own auto-dash and renders the whole attribution itself —
+      // see that file's comment for why); quotes: true is deliberately NOT
+      // used — the quoted passage itself no longer gets a "" wrapper, per
+      // explicit feedback reversing an earlier decision.
       const attributionArg = attribution ? `, attribution: [${attribution}]` : "";
-      return `#quote(block: true, quotes: true${attributionArg})[${inner}]`;
+      return `#quote(block: true${attributionArg})[${inner}]`;
     }
     case "callout": {
       const kind = normalizeCalloutKind(
