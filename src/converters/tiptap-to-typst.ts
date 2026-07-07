@@ -805,8 +805,20 @@ function renderBlock(node: TiptapNode, offset: number): string {
       // Same cached-SVG embedding path as functionPlot above — the SVG was
       // already fully rendered client-side (see anvilnote-web's
       // stats-chart-dialog.tsx).
+      //
+      // Real bug, caught via a live PDF export: renderImage() reads any
+      // numeric node.attrs.width as a PERCENTAGE of page width (the plain
+      // "image" node's own resize-handle convention — see its own
+      // `width: ${width}%` embed below). stats-chart's own width/height
+      // attrs mean something completely different: literal CENTIMETERS,
+      // already baked into the SVG's own intrinsic viewBox by
+      // anvilnote-charts at render time (see stats-chart-dialog.tsx's
+      // customSize()). Passing them through unchanged made a chart with
+      // width: 10.7 (meaning 10.7cm) embed as width: 10.7% of the page —
+      // a barely-visible thumbnail. Stripped here so renderImage embeds
+      // the SVG at its own already-correct natural size instead.
       const dataUrl = `data:image/svg+xml;base64,${Buffer.from(svg, "utf8").toString("base64")}`;
-      return renderImage({ ...node, attrs: { ...node.attrs, src: dataUrl } });
+      return renderImage({ ...node, attrs: { ...node.attrs, src: dataUrl, width: undefined, height: undefined } });
     }
     case "image":
       return renderImage(node);
