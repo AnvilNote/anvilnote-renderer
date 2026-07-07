@@ -42,6 +42,16 @@ const templateManifestSchema = z.object({
   // (toffee-tufte) instead emit #sidenote[...], imported from the template's
   // own package — see build-entry.ts and tiptap-to-typst.ts.
   footnoteStyle: z.enum(["footnote", "sidenote"]).default("footnote"),
+  // The template's own content/text-column width (page width minus its own
+  // margins), in cm — measured per-template via a real compile (each
+  // template sets its own page size/margins, often via a third-party
+  // @preview package's internal defaults, not any value visible in this
+  // manifest or template.typ itself), not derived from a shared formula.
+  // Consumers (e.g. anvilnote-web's stats-chart "ratio of text width"
+  // sizing) use this instead of assuming a fixed page width, since it
+  // varies per template. Required (no default) — every template needs its
+  // own real measurement, not a guessed fallback.
+  textWidthCm: z.number().positive(),
   fields: z.array(templateFieldSchema),
 });
 

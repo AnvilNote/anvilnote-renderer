@@ -9,9 +9,14 @@
     "entry": "template.typ"
   },
   "category": "teaching",
-  "tags": ["worksheet", "exercise", "minimal"],
+  "tags": [
+    "worksheet",
+    "exercise",
+    "minimal"
+  ],
   "fonts": [],
   "headingOffset": 0,
+  "textWidthCm": 16,
   "fields": [
     {
       "key": "title",
@@ -57,7 +62,10 @@
       "scope": "option",
       "required": false,
       "default": "default",
-      "options": ["default", "garamond"]
+      "options": [
+        "default",
+        "garamond"
+      ]
     },
     {
       "key": "primaryLang",
@@ -66,7 +74,13 @@
       "scope": "option",
       "required": false,
       "default": "zh",
-      "options": ["zh", "en", "ja", "ko", "th"]
+      "options": [
+        "zh",
+        "en",
+        "ja",
+        "ko",
+        "th"
+      ]
     },
     {
       "key": "titleFont",
@@ -75,7 +89,10 @@
       "scope": "option",
       "required": false,
       "default": "taiwan-pearl",
-      "options": ["taiwan-pearl", "source-han"]
+      "options": [
+        "taiwan-pearl",
+        "source-han"
+      ]
     },
     {
       "key": "bodyFont",
@@ -84,7 +101,10 @@
       "scope": "option",
       "required": false,
       "default": "song",
-      "options": ["song", "kai"]
+      "options": [
+        "song",
+        "kai"
+      ]
     },
     {
       "key": "dateFont",
@@ -93,7 +113,10 @@
       "scope": "option",
       "required": false,
       "default": "playfair",
-      "options": ["playfair", "tai-heritage"]
+      "options": [
+        "playfair",
+        "tai-heritage"
+      ]
     }
   ],
   "usesAnvilFontWrapper": true,

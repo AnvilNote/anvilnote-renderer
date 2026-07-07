@@ -8,6 +8,7 @@
     "entry": "template.typ"
   },
   "category": "note",
+  "textWidthCm": 16.6,
   "fields": [
     {
       "key": "title",

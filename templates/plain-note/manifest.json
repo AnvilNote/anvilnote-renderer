@@ -23,6 +23,7 @@
     "Liberation Serif"
   ],
   "headingOffset": 1,
+  "textWidthCm": 13.38,
   "fields": [
     {
       "key": "title",
@@ -70,7 +71,10 @@
       "scope": "option",
       "required": false,
       "default": "#0000ff",
-      "dependsOn": { "key": "colorlinks", "value": true }
+      "dependsOn": {
+        "key": "colorlinks",
+        "value": true
+      }
     }
   ],
   "usesAnvilFontWrapper": false,

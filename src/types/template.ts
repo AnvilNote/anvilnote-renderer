@@ -48,6 +48,9 @@ export type TemplateManifest = {
   fontPolicy: "anvil-controlled";
   /** How footnoteReference nodes render in Typst — see template-loader.ts. */
   footnoteStyle: "footnote" | "sidenote";
+  /** This template's own content/text-column width (page width minus its
+   *  own margins), in cm — see template-loader.ts's own schema comment. */
+  textWidthCm: number;
   fields: TemplateField[];
 };
 
