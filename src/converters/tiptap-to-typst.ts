@@ -5,6 +5,7 @@ import { normalizeCalloutKind } from "../config/callouts";
 import { proofLabel } from "../config/proof-labels";
 import { formatCrossRefLabel, getFigureSupplement } from "../config/cross-ref-labels";
 import { normalizeMermaidTheme, resolveMermaidThemeArgs } from "../config/mermaid-themes";
+import { getTypstFontStack } from "../config/fonts";
 
 // Converts a Tiptap document (the canonical anvilnote-web source format) to
 // Typst markup. The web app stores content wrapped as a single-element array
@@ -295,6 +296,68 @@ function indentLines(text: string, prefix: string): string {
 
 type Mark = { type?: unknown; attrs?: Record<string, unknown> };
 
+// Set true only around the renderBlocks(...) call for a blockquote's own
+// content (see the "blockquote" case below), reset false immediately after
+// — same module-level-flag pattern as primaryLang/footnoteMap above, scoped
+// to exactly one call site rather than threaded as a parameter through
+// every inlineToTypst/renderBlocks call in between.
+let insideBlockquote = false;
+
+// Han ideographs (main block + extension A + compatibility) plus CJK
+// punctuation/fullwidth forms, so a Chinese sentence's own punctuation
+// stays classified as CJK instead of flipping to the Latin/italic run.
+const CJK_PATTERN = /[一-鿿㐀-䶿豈-﫿　-〿＀-￯]/;
+
+// Splits text into runs of consecutive CJK vs. non-CJK characters, e.g.
+// '這是"test"字' -> [{text:'這是',isCjk:true},{text:'"test"',isCjk:false},{text:'字',isCjk:true}].
+function splitScriptRuns(text: string): { text: string; isCjk: boolean }[] {
+  const runs: { text: string; isCjk: boolean }[] = [];
+  for (const char of text) {
+    const isCjk = CJK_PATTERN.test(char);
+    const last = runs[runs.length - 1];
+    if (last && last.isCjk === isCjk) {
+      last.text += char;
+    } else {
+      runs.push({ text: char, isCjk });
+    }
+  }
+  return runs;
+}
+
+// Same character set as escapeTypstText, EXCEPT '"' — left unescaped so
+// Typst's own default smartquote renders it as a curly quote (" ") during
+// layout, confirmed via a real compile. escapeTypstText's blanket "\""
+// escaping (needed elsewhere, unrelated to this feature) would otherwise
+// produce a literal straight quote instead.
+function escapeQuoteRunText(value: string) {
+  return value
+    .replace(/\\/g, "\\\\")
+    .replace(/#/g, "\\#")
+    .replace(/\$/g, "\\$")
+    .replace(/\*/g, "\\*")
+    .replace(/_/g, "\\_")
+    .replace(/`/g, "\\`")
+    .replace(/</g, "\\<")
+    .replace(/>/g, "\\>")
+    .replace(/@/g, "\\@")
+    .replace(/-/g, "\\-")
+    .replace(/\+/g, "\\+")
+    .replace(/\//g, "\\/")
+    .replace(/=/g, "\\=");
+}
+
+const QUOTE_LATIN_FONT_STACK = getTypstFontStack("body");
+
+// Wraps one script-run in the blockquote's dedicated styling: CJK runs get
+// the TW-MOE-Std-Kai (教育部標準楷書) font; non-CJK runs get the existing
+// body serif stack with italic styling added on top.
+function wrapQuoteRun(text: string, isCjk: boolean): string {
+  const escaped = escapeQuoteRunText(text);
+  return isCjk
+    ? `#text(font: "TW-MOE-Std-Kai")[${escaped}]`
+    : `#text(font: ${QUOTE_LATIN_FONT_STACK}, style: "italic")[${escaped}]`;
+}
+
 function renderTextNode(node: TiptapNode): string {
   const raw = typeof node.text === "string" ? node.text : "";
   if (!raw) {
@@ -304,8 +367,17 @@ function renderTextNode(node: TiptapNode): string {
   const isCode = marks.some((mark) => mark?.type === "code");
 
   // Code marks wrap the raw text (only \ and " need escaping in a string
-  // literal); everything else is escaped for Typst markup.
-  let out = isCode ? `#raw("${escapeTypstString(raw)}")` : escapeTypstText(raw);
+  // literal); everything else is escaped for Typst markup. Inside a
+  // blockquote (and not a code span), text is script-split so Chinese
+  // renders in Kai and everything else in serif+italic, with quote marks
+  // left for Typst's own smartquote — see splitScriptRuns/wrapQuoteRun.
+  let out = isCode
+    ? `#raw("${escapeTypstString(raw)}")`
+    : insideBlockquote
+      ? splitScriptRuns(raw)
+          .map((run) => wrapQuoteRun(run.text, run.isCjk))
+          .join("")
+      : escapeTypstText(raw);
 
   for (const mark of marks) {
     switch (mark?.type) {
@@ -601,8 +673,20 @@ function renderBlock(node: TiptapNode, offset: number): string {
     case "taskList":
       return renderTaskList(node, offset);
     case "blockquote": {
+      // Saves/restores rather than a blind true/false pair, in case a
+      // blockquote is ever nested inside another one.
+      const wasInsideBlockquote = insideBlockquote;
+      insideBlockquote = true;
       const inner = renderBlocks(asNodes(node.content), offset);
-      return inner ? `#quote(block: true)[${inner}]` : "";
+      insideBlockquote = wasInsideBlockquote;
+      // quotes: true (not block: true) — confirmed via real compile: block:
+      // true indents but does NOT auto-wrap in quotation marks; the default/
+      // quotes:true form doesn't indent and wraps the ENTIRE quoted passage
+      // in one opening/closing " " pair (even across multiple paragraphs),
+      // which is the actual requested look — a single pair of quote marks
+      // bookending the whole quote, not indentation, and not quote marks
+      // only around substrings the user happened to type "" around.
+      return inner ? `#quote(quotes: true)[${inner}]` : "";
     }
     case "callout": {
       const kind = normalizeCalloutKind(
