@@ -28,7 +28,8 @@
       "label": "Date",
       "type": "date",
       "scope": "metadata",
-      "required": false
+      "required": false,
+      "default": "today"
     }
   ]
 }
