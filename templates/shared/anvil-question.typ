@@ -68,9 +68,9 @@
     cells.push([(#labels.at(i, default: str(i + 1))) #item])
   }
 
-  block(above: 0.5em, below: 0.5em, {
+  block(above: 1em, below: 0.5em, {
     if columns == 1 {
-      grid(columns: (1fr,), row-gutter: 0.4em, ..cells)
+      grid(columns: (1fr,), row-gutter: 0.5em, ..cells)
     } else {
       let total = 0
       for item in opts {
@@ -78,11 +78,11 @@
       }
       let avg = total / opts.len()
       if avg <= 14 {
-        grid(columns: (1fr, 1fr, 1fr, 1fr), column-gutter: 0.5em, row-gutter: 0.4em, ..cells)
+        grid(columns: (1fr, 1fr, 1fr, 1fr), column-gutter: 0.5em, row-gutter: 0.5em, ..cells)
       } else if avg <= 28 {
-        grid(columns: (1fr, 1fr), column-gutter: 1em, row-gutter: 0.4em, ..cells)
+        grid(columns: (1fr, 1fr), column-gutter: 1em, row-gutter: 0.5em, ..cells)
       } else {
-        grid(columns: (1fr,), row-gutter: 0.4em, ..cells)
+        grid(columns: (1fr,), row-gutter: 0.5em, ..cells)
       }
     }
   })
@@ -91,7 +91,7 @@
 // Written-answer area, "lines" mode: n horizontal rules with vertical
 // spacing between them, for a handwritten short-answer response.
 #let answer-lines(n: 3) = {
-  block(above: 0.5em, below: 0.5em, {
+  block(above: 1em, below: 0.5em, {
     for i in range(n) {
       v(1.2em)
       line(length: 100%, stroke: 0.6pt)
@@ -106,7 +106,7 @@
 // question-item-node-view.tsx — so this function does no percent-to-cm
 // math of its own).
 #let answer-blank(height: 4cm) = {
-  block(above: 0.5em, below: 0.5em, {
+  block(above: 1em, below: 0.5em, {
     box(
       width: 100%,
       height: height,
