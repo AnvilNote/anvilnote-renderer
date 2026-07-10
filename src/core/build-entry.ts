@@ -47,6 +47,8 @@ export type BuildTypstEntryInput = {
   sharedFontsRelPath: string;
   /** anvil-callout.typ import path relative to the entry file. */
   sharedCalloutsRelPath: string;
+  /** anvil-question.typ import path relative to the entry file. */
+  sharedQuestionsRelPath: string;
   /** Whether the renderer should wrap the template with apply-anvil-fonts. */
   usesAnvilFontWrapper?: boolean;
   /** "sidenote" templates need that symbol imported from the adapter into
@@ -132,6 +134,7 @@ export function buildTypstEntry(input: BuildTypstEntryInput): string {
   const lines = [
     `#import "${input.sharedFontsRelPath}": ${usesAnvilFontWrapper ? "apply-anvil-fonts, " : ""}anvil-font-stacks`,
     `#import "${input.sharedCalloutsRelPath}": callout, proof`,
+    `#import "${input.sharedQuestionsRelPath}": question, choices`,
     ...(input.usesMermaid ? [`#import "@preview/merman:0.1.0": mermaid`] : []),
     ...(input.usesSubpar ? [`#import "@preview/subpar:0.2.2"`] : []),
     `#import "${input.adapterRelPath}": ${adapterSymbols}`,
