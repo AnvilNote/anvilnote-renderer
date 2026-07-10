@@ -50,50 +50,44 @@
   })
 }
 
-#let _display-width(s) = {
-  let w = 0
-  for c in s.clusters() {
-    let cp = str.to-unicode(c)
-    w = w + if cp >= 0x2E80 { 2 } else { 1 }
-  }
-  w
-}
-
-// Auto-layout choices: 4-in-a-row -> 2x2 -> 1-per-line, based on average
-// visible character width across the non-empty options — same thresholds
-// as the reference template and anvilnote-web's question-choices.ts.
-// `columns: auto` (the default, single-choice items) runs that
-// heuristic; `columns: 1` (multi-choice items — see tiptap-to-typst.ts's
-// "questionItem" case) skips it and always renders one option per line,
-// per explicit feedback that single and multi are NOT visually identical
-// after all — only the (A)/(B)/... label style is shared, not the
-// column layout.
-#let choices(columns: auto, ..items) = {
+// Choices grid: `columns` is REQUIRED now (no more `auto` + internal
+// avg-width computation) - the caller (tiptap-to-typst.ts's
+// "choiceList" case) already decided the column count using the ported
+// choiceColumns() heuristic from choice-columns.ts, since a choice can
+// now be an image or equation (not just text), and Typst content values
+// (unlike strings) can't be measured for character width the way the
+// old string-based version did. ..items are now CONTENT values ([...]),
+// not string literals - each may itself contain bold/italic/inline-math
+// markup or an embedded image. The empty-filter the old string-based
+// version had is GONE - content values can't be trimmed/checked for
+// emptiness the way strings could; the caller (tiptap-to-typst.ts) is
+// responsible for not passing genuinely-empty choices in the first
+// place.
+#let choices(columns: 4, ..items) = {
   let labels = ("A", "B", "C", "D", "E", "F", "G", "H")
-  let opts = items.pos().filter(item => str(item).trim() != "")
+  let opts = items.pos()
   if opts.len() == 0 { return }
 
   let cells = ()
   for (i, item) in opts.enumerate() {
-    cells.push([(#labels.at(i, default: str(i + 1))) #item])
+    cells.push(
+      grid(
+        columns: (1.8em, 1fr),
+        column-gutter: 0.5em,
+        align: top,
+        [(#labels.at(i, default: str(i + 1)))],
+        item,
+      ),
+    )
   }
 
   block(above: 1em, below: 0.5em, {
     if columns == 1 {
       grid(columns: (1fr,), row-gutter: 0.8em, ..cells)
+    } else if columns == 2 {
+      grid(columns: (1fr, 1fr), column-gutter: 1em, row-gutter: 0.8em, ..cells)
     } else {
-      let total = 0
-      for item in opts {
-        total = total + _display-width(str(item))
-      }
-      let avg = total / opts.len()
-      if avg <= 14 {
-        grid(columns: (1fr, 1fr, 1fr, 1fr), column-gutter: 0.5em, row-gutter: 0.8em, ..cells)
-      } else if avg <= 28 {
-        grid(columns: (1fr, 1fr), column-gutter: 1em, row-gutter: 0.8em, ..cells)
-      } else {
-        grid(columns: (1fr,), row-gutter: 0.8em, ..cells)
-      }
+      grid(columns: (1fr, 1fr, 1fr, 1fr), column-gutter: 0.5em, row-gutter: 0.8em, ..cells)
     }
   })
 }
@@ -119,4 +113,16 @@
 // math of its own).
 #let answer-blank(height: 4cm) = {
   block(above: 1em, below: 0.5em, v(height))
+}
+
+// A single image-type choice, embedded at a fixed height (auto width) —
+// "uniform size" per explicit feedback, matches anvilnote-web's own
+// 120px-on-screen convention (this is the actual print-accurate 3cm
+// this feature's spec settled on; the web editor's 120px is its own
+// separate on-screen approximation of this same value, not derived from
+// it precisely — see globals.css's own comment). `source` is an
+// already-decoded image filename (tiptap-to-typst.ts's imageSink
+// mechanism — same one renderImage() for body images already uses).
+#let answer-choice-image(source, height: 3cm) = {
+  image(source, height: height)
 }
