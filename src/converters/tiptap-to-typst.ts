@@ -723,6 +723,19 @@ function renderBlock(node: TiptapNode, offset: number): string {
       const label = proofLabel(primaryLang);
       return `#proof(label: [${escapeTypstText(label)}])[${inner}]`;
     }
+    case "question": {
+      const inner = renderBlocks(asNodes(node.content), offset);
+      const choices = (Array.isArray(node.attrs?.choices) ? (node.attrs.choices as unknown[]) : [])
+        .filter((c): c is string => typeof c === "string" && c.trim() !== "");
+      // choices() takes plain Typst string literals (matches the
+      // reference template's own call convention, e.g.
+      // #choices("go", "goes", "going", "gone")) — escapeTypstString, not
+      // escapeTypstText, since these sit inside "..." not content [...].
+      const choicesArg = choices.length
+        ? `\n#choices(${choices.map((c) => `"${escapeTypstString(c)}"`).join(", ")})`
+        : "";
+      return `#question[${inner}]${choicesArg}`;
+    }
     case "mermaid": {
       const source = typeof node.attrs?.source === "string" ? node.attrs.source : "";
       if (!source.trim()) return "";
