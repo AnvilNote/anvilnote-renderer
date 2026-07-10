@@ -10,3 +10,4 @@ templates/*/.work/
 
 # Generated sample render artifacts (the .typ / .json inputs are committed).
 samples/*.pdf
+.worktrees/
