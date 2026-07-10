@@ -362,6 +362,7 @@
   author: none,
   date: none,
   toc: true,
+  numbered-headings: true,
   config: (:),
   body,
 ) = {
@@ -420,7 +421,7 @@
     text(font: "cwTeX Q Ming", fill: cfg.text-color)[#h(0.4em)#it.body]
   }
 
-  set heading(numbering: _heading-numbering)
+  set heading(numbering: if numbered-headings { _heading-numbering } else { none })
 
   // Shared heading renderer: Roboto regular, manual gap between number and title.
   let styled-heading(it, size, before, after) = {
@@ -433,7 +434,11 @@
         fill: cfg.text-color,
         size: size,
         weight: "regular",
-        [#numbering(_heading-numbering, ..nums)#h(0.6em)#it.body],
+        if numbered-headings {
+          [#numbering(_heading-numbering, ..nums)#h(0.6em)#it.body]
+        } else {
+          it.body
+        },
       ))
     }
     v(after, weak: true)
@@ -464,7 +469,11 @@
             h((hd.level - 2) * 1.4em)
             text(
               font: (cfg.heading-2-font, cfg.heading-2-cjk-font) + cfg.sans-langs,
-              [#numbering(_heading-numbering, ..nums)#h(0.5em)#hd.body],
+              if numbered-headings {
+                [#numbering(_heading-numbering, ..nums)#h(0.5em)#hd.body]
+              } else {
+                hd.body
+              },
             )
             box(width: 1fr, inset: (x: 0.4em), repeat[.])
             text(font: cfg.toc-page-font, [#pg])
