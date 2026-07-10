@@ -581,6 +581,20 @@ export function inlineToTypst(content: unknown): string {
         );
         return `#link(<${label}>)[${escapeTypstText(text)}]`;
       }
+      if (type === "questionBlank") {
+        // Same "read the value anvilnote-web's resolver already baked onto the
+        // node" approach as crossRef above — no renderer-side renumbering, one
+        // source of truth. Unlike crossRef this ISN'T a #link(<label>) (no
+        // Typst label is attached anywhere a questionItem renders); it's a
+        // plain #question-blank(n) call, since a printed quiz has no use for
+        // an in-PDF clickable jump the way a cross-reference does.
+        const broken = Boolean(node.attrs?.broken);
+        const resolvedValue = node.attrs?.resolvedValue;
+        if (broken || typeof resolvedValue !== "string") {
+          return "";
+        }
+        return `#question-blank("${escapeTypstString(resolvedValue)}")`;
+      }
       return "";
     })
     .reduce((joined, part) => joined + joinInlineTypstParts(joined, part), "");
