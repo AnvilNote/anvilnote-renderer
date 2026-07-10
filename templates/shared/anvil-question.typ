@@ -26,12 +26,19 @@
 // under the NUMBER column rather than under body — this matches
 // anvilnote-web's own question-item-node-view.tsx layout instead, where
 // choices/written-area sit inside the same flex column as the body.
-// above/below split evenly (0.5em each) so consecutive items sum to a
-// full 1em gap between them, per explicit feedback — not because either
-// value alone is meaningful.
+// Both above/below set to 1em — NOT 0.5em+0.5em "summing" to 1em. Real
+// bug, caught via a live PDF export the gap looked half of what was
+// asked for: Typst's own block spacing works like CSS margin
+// collapsing — two adjacent blocks' facing above/below values resolve
+// to their MAX, not their sum. Confirmed directly (isolated
+// #block(above:0.5em, below:0.5em) pairs compiled to a ~0.5em visible
+// gap, not 1em). Setting both sides to the full 1em is what actually
+// yields exactly 1em between consecutive items (max(1em, 1em) = 1em,
+// not 2em) while still giving the right gap before the first item and
+// after the last.
 #let question-item(body, extra: none) = {
   q-num.step()
-  block(above: 0.5em, below: 0.5em, {
+  block(above: 1em, below: 1em, {
     set par(first-line-indent: 0pt)
     grid(
       columns: (1.8em, 1fr),
