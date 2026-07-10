@@ -161,6 +161,10 @@ export async function renderDocument(
     numberedHeadings: template.manifest.supportsNumberedHeadings
       ? input.numberedHeadings
       : undefined,
+    marginTopCm: template.manifest.supportsCustomMargins ? input.marginTopCm : undefined,
+    marginBottomCm: template.manifest.supportsCustomMargins ? input.marginBottomCm : undefined,
+    marginLeftCm: template.manifest.supportsCustomMargins ? input.marginLeftCm : undefined,
+    marginRightCm: template.manifest.supportsCustomMargins ? input.marginRightCm : undefined,
   });
 
   await fs.writeFile(entryPath, entrySource, "utf8");

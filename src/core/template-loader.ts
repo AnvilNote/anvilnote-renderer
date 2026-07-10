@@ -46,6 +46,9 @@ const templateManifestSchema = z.object({
   // doesn't declare the parameter would be a compile error, not a
   // no-op.
   supportsNumberedHeadings: z.boolean().default(false),
+  // Same "Typst rejects an unrecognized named argument" reasoning as
+  // supportsNumberedHeadings above, for margin-top/bottom/left/right.
+  supportsCustomMargins: z.boolean().default(false),
   fontPolicy: z.literal("anvil-controlled").default("anvil-controlled"),
   // How footnoteReference nodes render in Typst. Most templates use Typst's
   // native #footnote[...] (no import needed); margin-note-style templates

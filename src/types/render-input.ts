@@ -12,6 +12,10 @@ export type RenderInput = {
     options: Record<string, RenderFieldValue>;
   };
   numberedHeadings: boolean;
+  marginTopCm?: number;
+  marginBottomCm?: number;
+  marginLeftCm?: number;
+  marginRightCm?: number;
   options?: {
     format?: "pdf";
     pageSize?: "A4" | "Letter";

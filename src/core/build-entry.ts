@@ -76,6 +76,16 @@ export type BuildTypstEntryInput = {
    *  template's own function default (numbered-headings: true) should
    *  apply when this feature isn't wired for that template yet. */
   numberedHeadings?: boolean;
+  /** Same "undefined = don't emit" pattern as numberedHeadings above, gated
+   *  by the active template's manifest supportsCustomMargins — each is an
+   *  independent partial override (a caller may set only marginTopCm and
+   *  leave the rest at the template's own built-in default). Values are cm;
+   *  emitted with a literal "cm" unit suffix so the receiving template gets
+   *  an actual Typst length, not a bare number. */
+  marginTopCm?: number;
+  marginBottomCm?: number;
+  marginLeftCm?: number;
+  marginRightCm?: number;
 };
 
 // Code-block styling shared by every template: Typst's native `raw`
@@ -180,6 +190,10 @@ export function buildTypstEntry(input: BuildTypstEntryInput): string {
     ...(input.numberedHeadings !== undefined
       ? [`  numbered-headings: ${input.numberedHeadings},`]
       : []),
+    ...(input.marginTopCm !== undefined ? [`  margin-top: ${input.marginTopCm}cm,`] : []),
+    ...(input.marginBottomCm !== undefined ? [`  margin-bottom: ${input.marginBottomCm}cm,`] : []),
+    ...(input.marginLeftCm !== undefined ? [`  margin-left: ${input.marginLeftCm}cm,`] : []),
+    ...(input.marginRightCm !== undefined ? [`  margin-right: ${input.marginRightCm}cm,`] : []),
     `)`,
     ``,
   );

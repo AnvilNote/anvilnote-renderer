@@ -46,6 +46,8 @@ export type TemplateManifest = {
   usesAnvilFontWrapper: boolean;
   /** Whether this template's adapter chain accepts a numbered-headings arg. */
   supportsNumberedHeadings: boolean;
+  /** Whether this template's adapter chain accepts margin-top/bottom/left/right args. */
+  supportsCustomMargins: boolean;
   /** Font ownership contract; always AnvilNote-controlled. */
   fontPolicy: "anvil-controlled";
   /** How footnoteReference nodes render in Typst — see template-loader.ts. */

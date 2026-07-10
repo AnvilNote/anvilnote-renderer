@@ -15,6 +15,10 @@ export const renderInputSchema = z.object({
     options: z.record(z.string(), fieldValueSchema).default({}),
   }),
   numberedHeadings: z.boolean().default(true),
+  marginTopCm: z.number().positive().optional(),
+  marginBottomCm: z.number().positive().optional(),
+  marginLeftCm: z.number().positive().optional(),
+  marginRightCm: z.number().positive().optional(),
   options: z
     .object({
       format: z.literal("pdf").default("pdf"),

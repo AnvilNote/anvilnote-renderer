@@ -363,10 +363,22 @@
   date: none,
   toc: true,
   numbered-headings: true,
+  // Independent per-side overrides, layered on top of `config`'s (or the
+  // built-in default's) margin-top/bottom/left/right — `none` (the default)
+  // leaves that side untouched, so a caller can override just one side
+  // without needing to know the other three's current values.
+  margin-top: none,
+  margin-bottom: none,
+  margin-left: none,
+  margin-right: none,
   config: (:),
   body,
 ) = {
   let cfg = _merge-config(config)
+  if margin-top != none { cfg.margin-top = margin-top }
+  if margin-bottom != none { cfg.margin-bottom = margin-bottom }
+  if margin-left != none { cfg.margin-left = margin-left }
+  if margin-right != none { cfg.margin-right = margin-right }
   let show-outline = toc
 
   set page(
