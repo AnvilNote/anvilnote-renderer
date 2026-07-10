@@ -52,6 +52,7 @@ const templateManifestSchema = z.object({
   // varies per template. Required (no default) — every template needs its
   // own real measurement, not a guessed fallback.
   textWidthCm: z.number().positive(),
+  textHeightCm: z.number().positive().optional(),
   fields: z.array(templateFieldSchema),
 });
 
