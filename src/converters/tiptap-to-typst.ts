@@ -261,7 +261,17 @@ function renderChoiceList(choiceListNode: TiptapNode, offset: number): string {
     if (!inner) return "[]";
     if (inner.type === "image") {
       const rendered = renderChoiceImage(inner);
-      return rendered ? `[${rendered}]` : "[]";
+      // renderChoiceImage() returns a bare Typst FUNCTION CALL
+      // (answer-choice-image("...")) — inside a content block ([...]),
+      // Typst's default markup mode treats identifiers as literal text,
+      // not code, so the call needs a leading "#" to actually execute
+      // (same reason every other function call embedded in a [...]
+      // content value throughout this file, e.g. renderImage's own
+      // #figure(...), is always "#"-prefixed). Without it, Typst printed
+      // the literal string `answer-choice-image("image-0.png")` on the
+      // page instead of embedding the image — caught via a real PDF
+      // render during this feature's own manual verification.
+      return rendered ? `[#${rendered}]` : "[]";
     }
     if (inner.type === "blockMath") {
       const latex = attrLatex(inner);
