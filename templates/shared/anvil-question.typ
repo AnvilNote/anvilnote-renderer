@@ -124,3 +124,22 @@
 #let answer-choice-image(source) = {
   image(source)
 }
+
+// Inline cloze-blank reference: the number of the questionItem this
+// blank points at, rendered as an underlined box — ported from
+// /Users/anthonysung/tutoring/english/quiz/quiz-template.typ's qblank(n),
+// with ONE change: inset scales with digit count (1.2em per side for a
+// single-digit number, 1em once it reaches two digits/>= 10) instead of
+// qblank's fixed 1em both sides, per explicit feedback. `n` is a STRING
+// (tiptap-to-typst.ts passes the already-resolved question number as
+// text, computed by anvilnote-web's cross-ref.ts resolver — this
+// function does no numbering of its own).
+#let question-blank(n) = {
+  let inset-x = if n.len() >= 2 { 1em } else { 1.2em }
+  box(
+    stroke: (bottom: 0.6pt),
+    inset: (x: inset-x, y: 0.1em),
+    baseline: 20%,
+    text(weight: "regular")[#n],
+  )
+}
