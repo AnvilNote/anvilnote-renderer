@@ -136,10 +136,19 @@ export async function renderDocument(
   );
   await fs.copyFile(sharedCalloutsSrc, path.join(buildDir, "anvil-callout.typ"));
 
+  // Same reasoning again for the question-block shared functions.
+  const sharedQuestionsSrc = resolveFromRendererRoot(
+    "templates",
+    "shared",
+    "anvil-question.typ",
+  );
+  await fs.copyFile(sharedQuestionsSrc, path.join(buildDir, "anvil-question.typ"));
+
   const entrySource = buildTypstEntry({
     adapterRelPath,
     sharedFontsRelPath: "./anvil-fonts.typ",
     sharedCalloutsRelPath: "./anvil-callout.typ",
+    sharedQuestionsRelPath: "./anvil-question.typ",
     usesAnvilFontWrapper: template.manifest.usesAnvilFontWrapper,
     footnoteStyle: template.manifest.footnoteStyle,
     fonts,
