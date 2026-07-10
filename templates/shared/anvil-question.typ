@@ -26,13 +26,16 @@
 // under the NUMBER column rather than under body — this matches
 // anvilnote-web's own question-item-node-view.tsx layout instead, where
 // choices/written-area sit inside the same flex column as the body.
+// above/below split evenly (0.5em each) so consecutive items sum to a
+// full 1em gap between them, per explicit feedback — not because either
+// value alone is meaningful.
 #let question-item(body, extra: none) = {
   q-num.step()
-  block(above: 0.6em, below: 0.2em, {
+  block(above: 0.5em, below: 0.5em, {
     set par(first-line-indent: 0pt)
     grid(
       columns: (1.8em, 1fr),
-      column-gutter: 1.2em,
+      column-gutter: 1em,
       align: top,
       context [#q-num.display().],
       { body; extra },
@@ -99,18 +102,14 @@
   })
 }
 
-// Written-answer area, "blank" mode: a single empty dashed-border box,
-// `height` already resolved to a literal length by the caller
-// (tiptap-to-typst.ts reads the questionItem's own writtenHeightCm attr
-// — already baked from a percentage client-side, see anvilnote-web's
+// Written-answer area, "blank" mode: reserved empty vertical space, NO
+// border/frame at all — per explicit feedback (first changed from
+// dashed to solid, then removed entirely). `height` already resolved to
+// a literal length by the caller (tiptap-to-typst.ts reads the
+// questionItem's own writtenHeightCm attr — already baked from a
+// percentage client-side, see anvilnote-web's
 // question-item-node-view.tsx — so this function does no percent-to-cm
 // math of its own).
 #let answer-blank(height: 4cm) = {
-  block(above: 1em, below: 0.5em, {
-    box(
-      width: 100%,
-      height: height,
-      stroke: (paint: gray, dash: "dashed", thickness: 0.6pt),
-    )
-  })
+  block(above: 1em, below: 0.5em, v(height))
 }
