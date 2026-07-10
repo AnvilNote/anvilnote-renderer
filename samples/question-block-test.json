@@ -9,44 +9,59 @@
           {
             "type": "heading",
             "attrs": { "level": 1 },
-            "content": [{ "type": "text", "text": "Question block smoke test" }]
+            "content": [{ "type": "text", "text": "Question block v2 smoke test" }]
           },
           {
             "type": "question",
-            "attrs": { "choices": ["go", "goes", "going", "gone"] },
             "content": [
               {
-                "type": "paragraph",
+                "type": "questionItem",
+                "attrs": { "kind": "single", "choices": ["go", "goes", "going", "gone"] },
                 "content": [
-                  { "type": "text", "text": "Choose the correct answer: She ___ to school every day." }
+                  { "type": "paragraph", "content": [{ "type": "text", "text": "Choose the correct answer: She ___ to school every day." }] }
+                ]
+              },
+              {
+                "type": "questionItem",
+                "attrs": {
+                  "kind": "multi",
+                  "choices": ["中等長度的選項一", "中等長度的選項二", "中等長度的選項三", "中等長度的選項四", "中等長度的選項五"]
+                },
+                "content": [
+                  { "type": "paragraph", "content": [{ "type": "text", "text": "選出所有正確答案。" }] }
+                ]
+              },
+              {
+                "type": "questionItem",
+                "attrs": { "kind": "written", "writtenMode": "lines", "writtenLines": 3 },
+                "content": [
+                  { "type": "paragraph", "content": [{ "type": "text", "text": "簡答：請說明泰語的時間量詞用法。" }] }
+                ]
+              },
+              {
+                "type": "questionItem",
+                "attrs": { "kind": "written", "writtenMode": "blank", "writtenHeightCm": 5 },
+                "content": [
+                  { "type": "paragraph", "content": [{ "type": "text", "text": "作文：以「我的家鄉」為題寫一段短文。" }] }
                 ]
               }
             ]
           },
           {
             "type": "question",
-            "attrs": {
-              "choices": [
-                "a fairly long English phrase here",
-                "another quite long option to pick",
-                "a third long-ish choice of text",
-                "and a fourth verbose one indeed"
-              ]
-            },
             "content": [
               {
-                "type": "paragraph",
-                "content": [{ "type": "text", "text": "Pick the best long-form answer." }]
-              }
-            ]
-          },
-          {
-            "type": "question",
-            "attrs": { "choices": ["中等長度的選項一", "中等長度的選項二", "中等長度的選項三", "中等長度的選項四"] },
-            "content": [
-              {
-                "type": "paragraph",
-                "content": [{ "type": "text", "text": "選出正確答案。" }]
+                "type": "questionItem",
+                "attrs": {
+                  "kind": "single",
+                  "choices": [
+                    "a fairly long English phrase here",
+                    "another quite long option to pick",
+                    "a third long-ish choice of text",
+                    "and a fourth verbose one indeed"
+                  ]
+                },
+                "content": [{ "type": "paragraph", "content": [{ "type": "text", "text": "A second block: pick the best long-form answer." }] }]
               }
             ]
           }
