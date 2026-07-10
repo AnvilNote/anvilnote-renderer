@@ -51,6 +51,11 @@ export type TemplateManifest = {
   /** This template's own content/text-column width (page width minus its
    *  own margins), in cm — see template-loader.ts's own schema comment. */
   textWidthCm: number;
+  /** Optional sibling to textWidthCm — page height minus this template's
+   *  own top/bottom margins, in cm. Only plain-note has a real value this
+   *  pass (see this file's own commit message for how it was derived);
+   *  every other template simply omits it. */
+  textHeightCm?: number;
   fields: TemplateField[];
 };
 
