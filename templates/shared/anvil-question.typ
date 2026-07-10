@@ -70,7 +70,7 @@
 
   block(above: 1em, below: 0.5em, {
     if columns == 1 {
-      grid(columns: (1fr,), row-gutter: 0.5em, ..cells)
+      grid(columns: (1fr,), row-gutter: 0.8em, ..cells)
     } else {
       let total = 0
       for item in opts {
@@ -78,11 +78,11 @@
       }
       let avg = total / opts.len()
       if avg <= 14 {
-        grid(columns: (1fr, 1fr, 1fr, 1fr), column-gutter: 0.5em, row-gutter: 0.5em, ..cells)
+        grid(columns: (1fr, 1fr, 1fr, 1fr), column-gutter: 0.5em, row-gutter: 0.8em, ..cells)
       } else if avg <= 28 {
-        grid(columns: (1fr, 1fr), column-gutter: 1em, row-gutter: 0.5em, ..cells)
+        grid(columns: (1fr, 1fr), column-gutter: 1em, row-gutter: 0.8em, ..cells)
       } else {
-        grid(columns: (1fr,), row-gutter: 0.5em, ..cells)
+        grid(columns: (1fr,), row-gutter: 0.8em, ..cells)
       }
     }
   })
