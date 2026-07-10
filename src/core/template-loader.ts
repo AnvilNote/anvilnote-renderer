@@ -36,6 +36,16 @@ const templateManifestSchema = z.object({
   // Font policy is AnvilNote-controlled via the renderer wrapper; these record
   // that contract. Older manifests default to the enforced policy.
   usesAnvilFontWrapper: z.boolean().default(true),
+  // Whether this template's own adapter chain (template.typ -> its
+  // upstream package/self-authored .typ) accepts and applies a
+  // `numbered-headings: bool` argument. Only plain-note does this pass
+  // — build-entry.ts/render-document.ts use this flag to decide whether
+  // to emit that named argument on anvil-template.with(...) at all,
+  // since Typst rejects an unrecognized named argument at the call
+  // site (does not silently ignore it) — passing it to a template that
+  // doesn't declare the parameter would be a compile error, not a
+  // no-op.
+  supportsNumberedHeadings: z.boolean().default(false),
   fontPolicy: z.literal("anvil-controlled").default("anvil-controlled"),
   // How footnoteReference nodes render in Typst. Most templates use Typst's
   // native #footnote[...] (no import needed); margin-note-style templates

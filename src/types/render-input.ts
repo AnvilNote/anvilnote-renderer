@@ -11,6 +11,7 @@ export type RenderInput = {
     meta: Record<string, RenderFieldValue>;
     options: Record<string, RenderFieldValue>;
   };
+  numberedHeadings: boolean;
   options?: {
     format?: "pdf";
     pageSize?: "A4" | "Letter";
