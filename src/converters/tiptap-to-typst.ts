@@ -734,6 +734,17 @@ function renderBlock(node: TiptapNode, offset: number): string {
       const inner = renderBlocks(asNodes(node.content), offset);
       const kind = typeof node.attrs?.kind === "string" ? node.attrs.kind : "single";
 
+      // `extra` (choices()/answer-lines()/answer-blank()) is passed as a
+      // NAMED argument in the CALL parens, before the trailing content
+      // block — `#question-item(extra: ...)[body]`, not
+      // `#question-item[body](extra: ...)` (Typst's own syntax rule: a
+      // trailing content-block argument to a function call must be the
+      // LAST token; anything meant to reach the function has to sit in
+      // the parens ahead of it). Real bug, caught via a live PDF export:
+      // an earlier version appended `, extra: ...` AFTER the closing
+      // `]`, which Typst parsed as literal trailing markup text, not an
+      // argument — the raw `, extra: choices(...)` string appeared
+      // printed on the page instead of being consumed by the function.
       if (kind === "written") {
         const writtenMode = typeof node.attrs?.writtenMode === "string" ? node.attrs.writtenMode : "lines";
         if (writtenMode === "blank") {
@@ -742,11 +753,11 @@ function renderBlock(node: TiptapNode, offset: number): string {
           // feature's design doc's "open gaps") — the written-blank area
           // is simply omitted rather than guessing a height. The
           // question-item() number+body layout still renders normally.
-          const areaArg = heightCm != null ? `\n#answer-blank(height: ${heightCm}cm)` : "";
-          return `#question-item[${inner}]${areaArg}`;
+          const extraArg = heightCm != null ? `extra: answer-blank(height: ${heightCm}cm)` : "";
+          return `#question-item(${extraArg})[${inner}]`;
         }
         const lines = typeof node.attrs?.writtenLines === "number" ? node.attrs.writtenLines : 3;
-        return `#question-item[${inner}]\n#answer-lines(n: ${lines})`;
+        return `#question-item(extra: answer-lines(n: ${lines}))[${inner}]`;
       }
 
       // single/multi — identical rendering, only the DEFAULT choice count
@@ -754,9 +765,9 @@ function renderBlock(node: TiptapNode, offset: number): string {
       const choices = (Array.isArray(node.attrs?.choices) ? (node.attrs.choices as unknown[]) : [])
         .filter((c): c is string => typeof c === "string" && c.trim() !== "");
       const choicesArg = choices.length
-        ? `\n#choices(${choices.map((c) => `"${escapeTypstString(c)}"`).join(", ")})`
+        ? `extra: choices(${choices.map((c) => `"${escapeTypstString(c)}"`).join(", ")})`
         : "";
-      return `#question-item[${inner}]${choicesArg}`;
+      return `#question-item(${choicesArg})[${inner}]`;
     }
     case "mermaid": {
       const source = typeof node.attrs?.source === "string" ? node.attrs.source : "";
