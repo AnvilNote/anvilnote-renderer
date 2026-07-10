@@ -2,7 +2,7 @@
   "slug": "plain-note",
   "name": "items.plain-note.name",
   "description": "items.plain-note.description",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "engine": {
     "kind": "local",
     "entry": "template.typ"
@@ -79,5 +79,6 @@
     }
   ],
   "usesAnvilFontWrapper": false,
+  "supportsNumberedHeadings": true,
   "fontPolicy": "anvil-controlled"
 }

@@ -70,6 +70,12 @@ export type BuildTypstEntryInput = {
   usesSubpar?: boolean;
   /** Global page paper baseline; adapters may override via their own set page. */
   pagePreset?: string;
+  /** Only set when the active template's manifest declares
+   *  supportsNumberedHeadings — undefined means "don't emit the
+   *  argument at all" (not "emit false"), since the receiving
+   *  template's own function default (numbered-headings: true) should
+   *  apply when this feature isn't wired for that template yet. */
+  numberedHeadings?: boolean;
 };
 
 // Code-block styling shared by every template: Typst's native `raw`
@@ -171,6 +177,9 @@ export function buildTypstEntry(input: BuildTypstEntryInput): string {
     `  meta: ${dictToTypst(input.meta)},`,
     `  options: ${dictToTypst(input.options)},`,
     `  fonts: _stacks,`,
+    ...(input.numberedHeadings !== undefined
+      ? [`  numbered-headings: ${input.numberedHeadings},`]
+      : []),
     `)`,
     ``,
   );

@@ -14,6 +14,7 @@ export const renderInputSchema = z.object({
     meta: z.record(z.string(), fieldValueSchema).default({}),
     options: z.record(z.string(), fieldValueSchema).default({}),
   }),
+  numberedHeadings: z.boolean().default(true),
   options: z
     .object({
       format: z.literal("pdf").default("pdf"),
