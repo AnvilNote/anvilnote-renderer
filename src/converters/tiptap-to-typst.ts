@@ -216,15 +216,14 @@ function renderImageFigureCore(node: TiptapNode): string | null {
 
 // A single choice-item's image content, embedded bare (no #figure/caption
 // chrome, unlike renderImage/renderImageFigureCore above) via the
-// answer-choice-image() Typst helper, which forces a fixed height/auto
-// width regardless of whatever width attr this particular image node
-// itself carries — same "the choice context always forces the uniform
-// look" rule anvilnote-web's own CSS applies. Reuses the exact same
-// decode/imageSink bookkeeping as renderImage (data-URL match, MIME ->
-// extension, filename handed to the caller's imageSink), just without
-// renderImage's own #figure/#align/caption wrapping, which a choice
-// doesn't want. Returns "" if the image can't be embedded (unsupported/
-// missing data URL), same silent-skip convention as renderImage.
+// answer-choice-image() Typst helper, at its own natural size — per
+// explicit feedback reversing an earlier "fixed height, uniform size"
+// decision. Reuses the exact same decode/imageSink bookkeeping as
+// renderImage (data-URL match, MIME -> extension, filename handed to
+// the caller's imageSink), just without renderImage's own
+// #figure/#align/caption wrapping, which a choice doesn't want. Returns
+// "" if the image can't be embedded (unsupported/missing data URL),
+// same silent-skip convention as renderImage.
 function renderChoiceImage(node: TiptapNode): string {
   const pdfSrc = typeof node.attrs?.pdfSrc === "string" ? node.attrs.pdfSrc : "";
   const src = pdfSrc || (typeof node.attrs?.src === "string" ? node.attrs.src : "");
@@ -245,7 +244,15 @@ function renderChoiceImage(node: TiptapNode): string {
 // argument to #question-item(...)) — NOT part of the normal
 // renderBlocks() flow, same "appears separately, empty string in normal
 // flow" pattern as the "footnotes" case below.
-function renderChoiceList(choiceListNode: TiptapNode, offset: number): string {
+// forceOneColumn: multi-choice items always render one option per line
+// — real bug, caught via live feedback after the choices-rich-content
+// rewrite: that rewrite's own renderChoiceList had DROPPED the
+// kind-based override entirely (the code comment at its "questionItem"
+// call site even documented this as intentional — it wasn't; multi and
+// single share only the (A)/(B)/... label style, not the column
+// heuristic, per this feature's original explicit product decision,
+// confirmed again now).
+function renderChoiceList(choiceListNode: TiptapNode, offset: number, forceOneColumn: boolean): string {
   const items = asNodes(choiceListNode.content);
   const entries: ChoiceEntry[] = items.map((item) => {
     const inner = asNodes(item.content)[0];
@@ -254,7 +261,7 @@ function renderChoiceList(choiceListNode: TiptapNode, offset: number): string {
     if (inner.type === "blockMath") return { kind: "blockMath" };
     return { kind: "text", text: textContent(inner.content) };
   });
-  const columns = choiceColumns(entries);
+  const columns = forceOneColumn ? 1 : choiceColumns(entries);
 
   const contentValues = items.map((item) => {
     const inner = asNodes(item.content)[0];
@@ -839,15 +846,11 @@ function renderBlock(node: TiptapNode, offset: number): string {
       // node.attrs.choices string array). Find it among this node's
       // children and render it via renderChoiceList; if somehow absent
       // (shouldn't happen post-migration, but don't crash if it is), no
-      // choices are emitted. The old "kind === multi always forces 1
-      // column" override is gone — v3's ChoiceListNodeView (web side)
-      // derives columns purely from content via choiceColumns(), with no
-      // kind-based override either, so the renderer mirrors that exactly
-      // (kind is now unused in this branch, only still read above for
-      // the "written" branch).
+      // choices are emitted. multi forces 1 column — see
+      // renderChoiceList's own comment.
       const choiceListChild = asNodes(node.content).find((child) => child.type === "choiceList");
       const choicesArg = choiceListChild
-        ? `extra: ${renderChoiceList(choiceListChild, offset)}`
+        ? `extra: ${renderChoiceList(choiceListChild, offset, kind === "multi")}`
         : "";
       return `#question-item(${choicesArg})[${inner}]`;
     }

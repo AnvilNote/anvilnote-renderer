@@ -115,14 +115,12 @@
   block(above: 1em, below: 0.5em, v(height))
 }
 
-// A single image-type choice, embedded at a fixed height (auto width) —
-// "uniform size" per explicit feedback, matches anvilnote-web's own
-// 120px-on-screen convention (this is the actual print-accurate 3cm
-// this feature's spec settled on; the web editor's 120px is its own
-// separate on-screen approximation of this same value, not derived from
-// it precisely — see globals.css's own comment). `source` is an
-// already-decoded image filename (tiptap-to-typst.ts's imageSink
-// mechanism — same one renderImage() for body images already uses).
-#let answer-choice-image(source, height: 3cm) = {
-  image(source, height: height)
+// A single image-type choice, embedded at its own natural size (no
+// forced height/crop) — per explicit feedback reversing the earlier
+// "uniform fixed height" decision: an image choice should render as-is,
+// whatever its real dimensions are. `source` is an already-decoded
+// image filename (tiptap-to-typst.ts's imageSink mechanism — same one
+// renderImage() for body images already uses).
+#let answer-choice-image(source) = {
+  image(source)
 }
