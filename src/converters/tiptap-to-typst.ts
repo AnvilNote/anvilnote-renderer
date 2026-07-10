@@ -723,18 +723,40 @@ function renderBlock(node: TiptapNode, offset: number): string {
       const label = proofLabel(primaryLang);
       return `#proof(label: [${escapeTypstText(label)}])[${inner}]`;
     }
+    // "question" is now a pure container (Tiptap v2 restructure — see
+    // this feature's design doc) holding one or more "questionItem"
+    // children; it has no Typst-side representation of its own, just
+    // renders its children in order.
     case "question": {
+      return renderBlocks(asNodes(node.content), offset);
+    }
+    case "questionItem": {
       const inner = renderBlocks(asNodes(node.content), offset);
+      const kind = typeof node.attrs?.kind === "string" ? node.attrs.kind : "single";
+
+      if (kind === "written") {
+        const writtenMode = typeof node.attrs?.writtenMode === "string" ? node.attrs.writtenMode : "lines";
+        if (writtenMode === "blank") {
+          const heightCm = typeof node.attrs?.writtenHeightCm === "number" ? node.attrs.writtenHeightCm : null;
+          // No baked cm value (template lacks textHeightCm — see this
+          // feature's design doc's "open gaps") — the written-blank area
+          // is simply omitted rather than guessing a height. The
+          // question-item() number+body layout still renders normally.
+          const areaArg = heightCm != null ? `\n#answer-blank(height: ${heightCm}cm)` : "";
+          return `#question-item[${inner}]${areaArg}`;
+        }
+        const lines = typeof node.attrs?.writtenLines === "number" ? node.attrs.writtenLines : 3;
+        return `#question-item[${inner}]\n#answer-lines(n: ${lines})`;
+      }
+
+      // single/multi — identical rendering, only the DEFAULT choice count
+      // differed at insert time (see anvilnote-web's question-kinds.ts).
       const choices = (Array.isArray(node.attrs?.choices) ? (node.attrs.choices as unknown[]) : [])
         .filter((c): c is string => typeof c === "string" && c.trim() !== "");
-      // choices() takes plain Typst string literals (matches the
-      // reference template's own call convention, e.g.
-      // #choices("go", "goes", "going", "gone")) — escapeTypstString, not
-      // escapeTypstText, since these sit inside "..." not content [...].
       const choicesArg = choices.length
         ? `\n#choices(${choices.map((c) => `"${escapeTypstString(c)}"`).join(", ")})`
         : "";
-      return `#question[${inner}]${choicesArg}`;
+      return `#question-item[${inner}]${choicesArg}`;
     }
     case "mermaid": {
       const source = typeof node.attrs?.source === "string" ? node.attrs.source : "";
