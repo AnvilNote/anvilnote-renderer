@@ -15,12 +15,18 @@
 #let q-num = counter("anvil-question")
 
 // body: one sub-question's content (paragraphs/images, same
-// renderBlocks() path every other block content goes through). Used by
-// EVERY kind (single/multi/written) — the choices()/answer-lines()/
-// answer-blank() call for that item's specific kind is emitted by the
-// caller (tiptap-to-typst.ts) directly after this, not inside it, so
-// this function only owns the number+body layout.
-#let question-item(body) = {
+// renderBlocks() path every other block content goes through). extra:
+// that item's choices()/answer-lines()/answer-blank() call (or `none`
+// for a plain body with nothing below it) — placed in the SAME grid
+// column as body, one row below it, so it's indented under body's own
+// left edge instead of sitting flush with the page margin. Real bug,
+// caught via a live PDF export: extra used to be emitted by the caller
+// (tiptap-to-typst.ts) as a SEPARATE top-level call after
+// #question-item[...], which put it back at the page's left margin,
+// under the NUMBER column rather than under body — this matches
+// anvilnote-web's own question-item-node-view.tsx layout instead, where
+// choices/written-area sit inside the same flex column as the body.
+#let question-item(body, extra: none) = {
   q-num.step()
   block(above: 0.6em, below: 0.2em, {
     set par(first-line-indent: 0pt)
@@ -29,7 +35,7 @@
       column-gutter: 0.5em,
       align: top,
       context [#q-num.display().],
-      body,
+      { body; extra },
     )
   })
 }
