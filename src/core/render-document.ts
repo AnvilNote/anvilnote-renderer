@@ -149,6 +149,9 @@ export async function renderDocument(
     usesMermaid,
     usesSubpar,
     pagePreset: pagePreset(input.options?.pageSize),
+    numberedHeadings: template.manifest.supportsNumberedHeadings
+      ? input.numberedHeadings
+      : undefined,
   });
 
   await fs.writeFile(entryPath, entrySource, "utf8");

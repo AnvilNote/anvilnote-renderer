@@ -44,6 +44,8 @@ export type TemplateManifest = {
   headingOffset: number;
   /** Whether the renderer wraps this template with apply-anvil-fonts. */
   usesAnvilFontWrapper: boolean;
+  /** Whether this template's adapter chain accepts a numbered-headings arg. */
+  supportsNumberedHeadings: boolean;
   /** Font ownership contract; always AnvilNote-controlled. */
   fontPolicy: "anvil-controlled";
   /** How footnoteReference nodes render in Typst — see template-loader.ts. */
