@@ -44,6 +44,44 @@
                 "content": [
                   { "type": "paragraph", "content": [{ "type": "text", "text": "作文：以「我的家鄉」為題寫一段短文。" }] }
                 ]
+              },
+              {
+                "type": "questionItem",
+                "attrs": { "kind": "single" },
+                "content": [
+                  { "type": "paragraph", "content": [{ "type": "text", "text": "Mixed-type choices test." }] },
+                  {
+                    "type": "choiceList",
+                    "content": [
+                      {
+                        "type": "choiceItem",
+                        "content": [
+                          {
+                            "type": "paragraph",
+                            "content": [{ "type": "text", "text": "bold option", "marks": [{ "type": "bold" }] }]
+                          }
+                        ]
+                      },
+                      {
+                        "type": "choiceItem",
+                        "content": [
+                          {
+                            "type": "image",
+                            "attrs": { "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAEElEQVR4nGP4z8AARAwQCgAf7gP9i18U1AAAAABJRU5ErkJggg==" }
+                          }
+                        ]
+                      },
+                      {
+                        "type": "choiceItem",
+                        "content": [{ "type": "blockMath", "attrs": { "latex": "x^2 + 1" } }]
+                      },
+                      {
+                        "type": "choiceItem",
+                        "content": [{ "type": "paragraph", "content": [{ "type": "text", "text": "plain text" }] }]
+                      }
+                    ]
+                  }
+                ]
               }
             ]
           },
