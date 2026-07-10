@@ -1,0 +1,63 @@
+{
+  "document": {
+    "id": "question-block-test",
+    "title": "Question Block Test",
+    "content": [
+      {
+        "type": "doc",
+        "content": [
+          {
+            "type": "heading",
+            "attrs": { "level": 1 },
+            "content": [{ "type": "text", "text": "Question block smoke test" }]
+          },
+          {
+            "type": "question",
+            "attrs": { "choices": ["go", "goes", "going", "gone"] },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  { "type": "text", "text": "Choose the correct answer: She ___ to school every day." }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "question",
+            "attrs": {
+              "choices": [
+                "a fairly long English phrase here",
+                "another quite long option to pick",
+                "a third long-ish choice of text",
+                "and a fourth verbose one indeed"
+              ]
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [{ "type": "text", "text": "Pick the best long-form answer." }]
+              }
+            ]
+          },
+          {
+            "type": "question",
+            "attrs": { "choices": ["中等長度的選項一", "中等長度的選項二", "中等長度的選項三", "中等長度的選項四"] },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [{ "type": "text", "text": "選出正確答案。" }]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "template": {
+    "slug": "plain-note",
+    "meta": { "title": "Question Block Test", "author": "Test", "date": "2026-07-10" },
+    "options": { "primaryLang": "en", "titleFont": "taiwan-pearl", "bodyFont": "song", "dateFont": "playfair", "mathMode": "default" }
+  },
+  "options": {}
+}
