@@ -52,31 +52,38 @@
 // Auto-layout choices: 4-in-a-row -> 2x2 -> 1-per-line, based on average
 // visible character width across the non-empty options — same thresholds
 // as the reference template and anvilnote-web's question-choices.ts.
-// Used identically for both "single" and "multi" kind items — no visual
-// distinction between them, per explicit product decision.
-#let choices(..items) = {
+// `columns: auto` (the default, single-choice items) runs that
+// heuristic; `columns: 1` (multi-choice items — see tiptap-to-typst.ts's
+// "questionItem" case) skips it and always renders one option per line,
+// per explicit feedback that single and multi are NOT visually identical
+// after all — only the (A)/(B)/... label style is shared, not the
+// column layout.
+#let choices(columns: auto, ..items) = {
   let labels = ("A", "B", "C", "D", "E", "F", "G", "H")
   let opts = items.pos().filter(item => str(item).trim() != "")
   if opts.len() == 0 { return }
-
-  let total = 0
-  for item in opts {
-    total = total + _display-width(str(item))
-  }
-  let avg = total / opts.len()
 
   let cells = ()
   for (i, item) in opts.enumerate() {
     cells.push([(#labels.at(i, default: str(i + 1))) #item])
   }
 
-  block(above: 0.3em, below: 0.5em, {
-    if avg <= 14 {
-      grid(columns: (1fr, 1fr, 1fr, 1fr), column-gutter: 0.5em, row-gutter: 0.4em, ..cells)
-    } else if avg <= 28 {
-      grid(columns: (1fr, 1fr), column-gutter: 1em, row-gutter: 0.4em, ..cells)
-    } else {
+  block(above: 0.5em, below: 0.5em, {
+    if columns == 1 {
       grid(columns: (1fr,), row-gutter: 0.4em, ..cells)
+    } else {
+      let total = 0
+      for item in opts {
+        total = total + _display-width(str(item))
+      }
+      let avg = total / opts.len()
+      if avg <= 14 {
+        grid(columns: (1fr, 1fr, 1fr, 1fr), column-gutter: 0.5em, row-gutter: 0.4em, ..cells)
+      } else if avg <= 28 {
+        grid(columns: (1fr, 1fr), column-gutter: 1em, row-gutter: 0.4em, ..cells)
+      } else {
+        grid(columns: (1fr,), row-gutter: 0.4em, ..cells)
+      }
     }
   })
 }
@@ -84,7 +91,7 @@
 // Written-answer area, "lines" mode: n horizontal rules with vertical
 // spacing between them, for a handwritten short-answer response.
 #let answer-lines(n: 3) = {
-  block(above: 0.4em, below: 0.5em, {
+  block(above: 0.5em, below: 0.5em, {
     for i in range(n) {
       v(1.2em)
       line(length: 100%, stroke: 0.6pt)
@@ -99,7 +106,7 @@
 // question-item-node-view.tsx — so this function does no percent-to-cm
 // math of its own).
 #let answer-blank(height: 4cm) = {
-  block(above: 0.4em, below: 0.5em, {
+  block(above: 0.5em, below: 0.5em, {
     box(
       width: 100%,
       height: height,
