@@ -1,4 +1,5 @@
 import { latexToTypstMath } from "./latex-to-typst";
+import { choiceColumns, type ChoiceEntry } from "./choice-columns";
 import { createTypstRawBlock } from "./code-block";
 import { escapeTypstString, escapeTypstText, sanitizeTypstLabel } from "../utils/escape-typst";
 import { normalizeCalloutKind } from "../config/callouts";
@@ -211,6 +212,69 @@ function renderImageFigureCore(node: TiptapNode): string | null {
     return `figure(${imageSrc})`;
   }
   return `figure(${imageSrc}, caption: [${renderCaptionText(caption)}])`;
+}
+
+// A single choice-item's image content, embedded bare (no #figure/caption
+// chrome, unlike renderImage/renderImageFigureCore above) via the
+// answer-choice-image() Typst helper, which forces a fixed height/auto
+// width regardless of whatever width attr this particular image node
+// itself carries — same "the choice context always forces the uniform
+// look" rule anvilnote-web's own CSS applies. Reuses the exact same
+// decode/imageSink bookkeeping as renderImage (data-URL match, MIME ->
+// extension, filename handed to the caller's imageSink), just without
+// renderImage's own #figure/#align/caption wrapping, which a choice
+// doesn't want. Returns "" if the image can't be embedded (unsupported/
+// missing data URL), same silent-skip convention as renderImage.
+function renderChoiceImage(node: TiptapNode): string {
+  const pdfSrc = typeof node.attrs?.pdfSrc === "string" ? node.attrs.pdfSrc : "";
+  const src = pdfSrc || (typeof node.attrs?.src === "string" ? node.attrs.src : "");
+  if (!src) return "";
+
+  const match = src.match(/^data:(image\/[a-z0-9.+-]+|application\/pdf);base64,(.+)$/i);
+  if (!match || !imageSink) return "";
+
+  const ext = IMAGE_MIME_EXT[match[1].toLowerCase()];
+  if (!ext) return "";
+  const filename = `image-${imageSink.length}.${ext}`;
+  imageSink.push({ filename, base64: match[2] });
+
+  return `answer-choice-image("${filename}")`;
+}
+
+// Rendered explicitly by questionItem's own case (as the "extra:"
+// argument to #question-item(...)) — NOT part of the normal
+// renderBlocks() flow, same "appears separately, empty string in normal
+// flow" pattern as the "footnotes" case below.
+function renderChoiceList(choiceListNode: TiptapNode, offset: number): string {
+  const items = asNodes(choiceListNode.content);
+  const entries: ChoiceEntry[] = items.map((item) => {
+    const inner = asNodes(item.content)[0];
+    if (!inner) return { kind: "text", text: "" };
+    if (inner.type === "image") return { kind: "image" };
+    if (inner.type === "blockMath") return { kind: "blockMath" };
+    return { kind: "text", text: textContent(inner.content) };
+  });
+  const columns = choiceColumns(entries);
+
+  const contentValues = items.map((item) => {
+    const inner = asNodes(item.content)[0];
+    if (!inner) return "[]";
+    if (inner.type === "image") {
+      const rendered = renderChoiceImage(inner);
+      return rendered ? `[${rendered}]` : "[]";
+    }
+    if (inner.type === "blockMath") {
+      const latex = attrLatex(inner);
+      const { typst, ok } = latexToTypstMath(latex);
+      return ok ? `[$${typst}$]` : "[]";
+    }
+    // text: a paragraph — reuse the same inline-content renderer every
+    // other paragraph in this file goes through, so bold/italic/
+    // inline-math already work with zero extra code.
+    return `[${inlineToTypst(inner.content)}]`;
+  });
+
+  return `choices(columns: ${columns}, ${contentValues.join(", ")})`;
 }
 
 // Side-by-side subfigures via the bundled @preview/subpar package — pure
@@ -760,15 +824,20 @@ function renderBlock(node: TiptapNode, offset: number): string {
         return `#question-item(extra: answer-lines(n: ${lines}))[${inner}]`;
       }
 
-      // single: auto 4/2/1 column layout (choices()'s own default).
-      // multi: always 1 column (one option per line) — per explicit
-      // feedback, only the (A)/(B)/... label style is shared with
-      // single, not the column heuristic.
-      const choices = (Array.isArray(node.attrs?.choices) ? (node.attrs.choices as unknown[]) : [])
-        .filter((c): c is string => typeof c === "string" && c.trim() !== "");
-      const choicesItems = choices.map((c) => `"${escapeTypstString(c)}"`).join(", ");
-      const choicesArg = choices.length
-        ? `extra: choices(${kind === "multi" ? "columns: 1, " : ""}${choicesItems})`
+      // single/multi: choices now live as a real "choiceList" child in
+      // this questionItem's own content (v3 — replaces the old
+      // node.attrs.choices string array). Find it among this node's
+      // children and render it via renderChoiceList; if somehow absent
+      // (shouldn't happen post-migration, but don't crash if it is), no
+      // choices are emitted. The old "kind === multi always forces 1
+      // column" override is gone — v3's ChoiceListNodeView (web side)
+      // derives columns purely from content via choiceColumns(), with no
+      // kind-based override either, so the renderer mirrors that exactly
+      // (kind is now unused in this branch, only still read above for
+      // the "written" branch).
+      const choiceListChild = asNodes(node.content).find((child) => child.type === "choiceList");
+      const choicesArg = choiceListChild
+        ? `extra: ${renderChoiceList(choiceListChild, offset)}`
         : "";
       return `#question-item(${choicesArg})[${inner}]`;
     }
@@ -879,6 +948,16 @@ function renderBlock(node: TiptapNode, offset: number): string {
       // The trailing footnotes list itself is never rendered as a visible
       // block — its content is inlined at each footnoteReference via
       // footnoteMap (built in tiptapToTypst) using Typst's #footnote[...].
+      return "";
+    case "choiceList":
+      // Rendered explicitly by "questionItem"'s own case above (as the
+      // "extra:" argument to #question-item(...), via renderChoiceList) —
+      // NOT part of the normal renderBlocks() flow. Must be a no-op here
+      // (same pattern as "footnotes" just above), or a questionItem's
+      // choiceList would render TWICE: once inside `inner` (this
+      // questionItem case's own renderBlocks(asNodes(node.content), ...)
+      // call walks every child including choiceList), once via the
+      // explicit `extra:` argument.
       return "";
     default:
       return inlineToTypst(node.content);
