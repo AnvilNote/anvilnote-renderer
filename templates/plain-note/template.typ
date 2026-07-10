@@ -4,7 +4,7 @@
 // feeds it metadata and a small set of behavior toggles.
 #import "upstream.typ": plain-note, hypersetup
 
-#let anvil-template(meta: (:), options: (:), fonts: (:), body) = {
+#let anvil-template(meta: (:), options: (:), fonts: (:), numbered-headings: true, body) = {
   let colorlinks = options.at("colorlinks", default: true)
   let link-color = if colorlinks {
     rgb(options.at("linkColor", default: "#0000ff"))
@@ -24,6 +24,7 @@
     author: meta.at("author", default: none),
     date: meta.at("date", default: none),
     toc: options.at("toc", default: true),
+    numbered-headings: numbered-headings,
     // upstream's toc-color is independent of hypersetup's colorlinks (it
     // paints the TOC via a local `set text` before the link is drawn, so
     // colorlinks: false alone doesn't reach it) — wire it here so turning
