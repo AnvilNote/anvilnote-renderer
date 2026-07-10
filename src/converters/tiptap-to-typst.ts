@@ -760,12 +760,15 @@ function renderBlock(node: TiptapNode, offset: number): string {
         return `#question-item(extra: answer-lines(n: ${lines}))[${inner}]`;
       }
 
-      // single/multi — identical rendering, only the DEFAULT choice count
-      // differed at insert time (see anvilnote-web's question-kinds.ts).
+      // single: auto 4/2/1 column layout (choices()'s own default).
+      // multi: always 1 column (one option per line) — per explicit
+      // feedback, only the (A)/(B)/... label style is shared with
+      // single, not the column heuristic.
       const choices = (Array.isArray(node.attrs?.choices) ? (node.attrs.choices as unknown[]) : [])
         .filter((c): c is string => typeof c === "string" && c.trim() !== "");
+      const choicesItems = choices.map((c) => `"${escapeTypstString(c)}"`).join(", ");
       const choicesArg = choices.length
-        ? `extra: choices(${choices.map((c) => `"${escapeTypstString(c)}"`).join(", ")})`
+        ? `extra: choices(${kind === "multi" ? "columns: 1, " : ""}${choicesItems})`
         : "";
       return `#question-item(${choicesArg})[${inner}]`;
     }
