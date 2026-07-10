@@ -1,21 +1,26 @@
-// AnvilNote shared question block — numbered multiple-choice question
-// body + auto-columned choices list. Ported from the reference personal
-// template at /Users/anthonysung/tutoring/english/quiz/quiz-template.typ
-// (its own q-num counter, question(), choices(), display-width()) — same
-// 14/28 average-display-width thresholds so the PDF layout matches
-// anvilnote-web's own src/lib/question-choices.ts heuristic (CJK code
-// point >= U+2E80 counts as 2 display units, everything else as 1).
+// AnvilNote shared question block — see this feature's design doc
+// ("Question Block v2") for the container/item split this file
+// implements. q-num now steps once per SUB-QUESTION (a Tiptap
+// "questionItem" node, converted by tiptap-to-typst.ts's own
+// "questionItem" case) — the "question" node itself (a container of one
+// or more questionItems) has no Typst-side representation of its own;
+// tiptap-to-typst.ts's "question" case just renders its children
+// directly via renderBlocks(), no wrapper function call.
 //
-// One counter, shared by every template that imports this file (see
-// anvilnote-renderer's build-entry.ts) — question numbers run
-// continuously across the whole document, matching anvilnote-web's own
-// live-counted numbering (question-node-view.tsx's useQuestionNumber).
+// Ported from the reference personal template at
+// /Users/anthonysung/tutoring/english/quiz/quiz-template.typ (its own
+// q-num counter, question(), choices(), display-width()) — same 14/28
+// average-display-width thresholds so the PDF layout matches
+// anvilnote-web's own src/lib/question-choices.ts heuristic.
 #let q-num = counter("anvil-question")
 
-// body: the question's content (paragraphs, same renderBlocks() path
-// every other block content goes through — see tiptap-to-typst.ts's
-// "question" case).
-#let question(body) = {
+// body: one sub-question's content (paragraphs/images, same
+// renderBlocks() path every other block content goes through). Used by
+// EVERY kind (single/multi/written) — the choices()/answer-lines()/
+// answer-blank() call for that item's specific kind is emitted by the
+// caller (tiptap-to-typst.ts) directly after this, not inside it, so
+// this function only owns the number+body layout.
+#let question-item(body) = {
   q-num.step()
   block(above: 0.6em, below: 0.2em, {
     set par(first-line-indent: 0pt)
@@ -41,9 +46,8 @@
 // Auto-layout choices: 4-in-a-row -> 2x2 -> 1-per-line, based on average
 // visible character width across the non-empty options — same thresholds
 // as the reference template and anvilnote-web's question-choices.ts.
-// Empty strings (tiptap-to-typst.ts already filters these before calling,
-// but this function stays defensive so it degrades gracefully if called
-// directly) are skipped for both the average calculation and rendering.
+// Used identically for both "single" and "multi" kind items — no visual
+// distinction between them, per explicit product decision.
 #let choices(..items) = {
   let labels = ("A", "B", "C", "D", "E", "F", "G", "H")
   let opts = items.pos().filter(item => str(item).trim() != "")
@@ -68,5 +72,32 @@
     } else {
       grid(columns: (1fr,), row-gutter: 0.4em, ..cells)
     }
+  })
+}
+
+// Written-answer area, "lines" mode: n horizontal rules with vertical
+// spacing between them, for a handwritten short-answer response.
+#let answer-lines(n: 3) = {
+  block(above: 0.4em, below: 0.5em, {
+    for i in range(n) {
+      v(1.2em)
+      line(length: 100%, stroke: 0.6pt)
+    }
+  })
+}
+
+// Written-answer area, "blank" mode: a single empty dashed-border box,
+// `height` already resolved to a literal length by the caller
+// (tiptap-to-typst.ts reads the questionItem's own writtenHeightCm attr
+// — already baked from a percentage client-side, see anvilnote-web's
+// question-item-node-view.tsx — so this function does no percent-to-cm
+// math of its own).
+#let answer-blank(height: 4cm) = {
+  block(above: 0.4em, below: 0.5em, {
+    box(
+      width: 100%,
+      height: height,
+      stroke: (paint: gray, dash: "dashed", thickness: 0.6pt),
+    )
   })
 }
