@@ -134,7 +134,7 @@ export function buildTypstEntry(input: BuildTypstEntryInput): string {
   const lines = [
     `#import "${input.sharedFontsRelPath}": ${usesAnvilFontWrapper ? "apply-anvil-fonts, " : ""}anvil-font-stacks`,
     `#import "${input.sharedCalloutsRelPath}": callout, proof`,
-    `#import "${input.sharedQuestionsRelPath}": question, choices`,
+    `#import "${input.sharedQuestionsRelPath}": question-item, choices, answer-lines, answer-blank`,
     ...(input.usesMermaid ? [`#import "@preview/merman:0.1.0": mermaid`] : []),
     ...(input.usesSubpar ? [`#import "@preview/subpar:0.2.2"`] : []),
     `#import "${input.adapterRelPath}": ${adapterSymbols}`,
