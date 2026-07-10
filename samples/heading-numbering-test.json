@@ -1,0 +1,37 @@
+{
+  "document": {
+    "id": "heading-numbering-test",
+    "title": "Heading Numbering Test",
+    "content": [
+      {
+        "type": "doc",
+        "content": [
+          {
+            "type": "heading",
+            "attrs": { "level": 1 },
+            "content": [{ "type": "text", "text": "First Section" }]
+          },
+          { "type": "paragraph", "content": [{ "type": "text", "text": "Some body text." }] },
+          {
+            "type": "heading",
+            "attrs": { "level": 2 },
+            "content": [{ "type": "text", "text": "A Subsection" }]
+          },
+          { "type": "paragraph", "content": [{ "type": "text", "text": "More body text." }] },
+          {
+            "type": "heading",
+            "attrs": { "level": 1 },
+            "content": [{ "type": "text", "text": "Second Section" }]
+          }
+        ]
+      }
+    ]
+  },
+  "template": {
+    "slug": "plain-note",
+    "meta": { "title": "Heading Numbering Test", "author": "Test", "date": "2026-07-10" },
+    "options": { "primaryLang": "en", "titleFont": "taiwan-pearl", "bodyFont": "song", "dateFont": "playfair", "mathMode": "default" }
+  },
+  "numberedHeadings": true,
+  "options": {}
+}
