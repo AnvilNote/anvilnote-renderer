@@ -32,7 +32,7 @@
     set par(first-line-indent: 0pt)
     grid(
       columns: (1.8em, 1fr),
-      column-gutter: 0.5em,
+      column-gutter: 1.2em,
       align: top,
       context [#q-num.display().],
       { body; extra },
