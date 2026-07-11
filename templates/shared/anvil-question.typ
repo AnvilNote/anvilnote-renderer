@@ -149,3 +149,21 @@
     text(weight: "regular")[#n],
   )
 }
+
+// Plain fixed-width inline cloze blank for prose ("the ______ he showed")
+// — ported from the reference personal template's blank(width) at
+// /Users/anthonysung/tutoring/english/quiz/quiz-template.typ:73, with ONE
+// change: `underline(h(width))` (the reference template's own
+// implementation) draws NOTHING — confirmed via an isolated compile: Typst's
+// underline() decorates actual glyph content, and h() alone is pure
+// spacing with no content to decorate, so the line silently never
+// appears. Uses a real box border instead (question-blank(n) above uses
+// the same stroke: (bottom:) technique). NO explicit height — confirmed
+// live in the Typst web playground that adding height: 1em rides the
+// line up off the text baseline (same bug the web CSS side hit and fixed
+// the same way — no explicit height, let it collapse to the border's own
+// thickness, which sits exactly on the baseline). NOT a reference/target
+// like question-blank(n) — no number, nothing to resolve, just a blank.
+// Fixed at 3em (not the reference template's variable-width default) per
+// explicit product decision — this app exposes no width control at all.
+#let inline-blank() = box(width: 3em, stroke: (bottom: 0.5pt))

@@ -595,6 +595,12 @@ export function inlineToTypst(content: unknown): string {
         }
         return `#question-blank("${escapeTypstString(resolvedValue)}")`;
       }
+      if (type === "inlineBlank") {
+        // No attrs at all — a fixed 3em underline, nothing to resolve or
+        // escape. See anvil-question.typ's inline-blank() for why this
+        // isn't question-blank(n)'s reference/target machinery.
+        return `#inline-blank()`;
+      }
       return "";
     })
     .reduce((joined, part) => joined + joinInlineTypstParts(joined, part), "");
