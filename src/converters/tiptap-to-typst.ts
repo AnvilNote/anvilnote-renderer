@@ -944,7 +944,7 @@ function renderBlock(node: TiptapNode, offset: number): string {
       return `$ ${typst} $`;
     }
     case "horizontalRule":
-      return "#line(length: 100%)";
+      return "#line(length: 100%, stroke: 0.5pt)";
     case "functionPlot": {
       const svg = typeof node.attrs?.svg === "string" ? node.attrs.svg : "";
       if (!svg.trim()) return "";
