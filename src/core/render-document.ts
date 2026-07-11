@@ -144,12 +144,23 @@ export async function renderDocument(
   );
   await fs.copyFile(sharedQuestionsSrc, path.join(buildDir, "anvil-question.typ"));
 
+  // Same reasoning again for the shared numbered-headings/margin override
+  // helper — see template-loader.ts's usesSharedOverrides doc comment.
+  const sharedOverridesSrc = resolveFromRendererRoot(
+    "templates",
+    "shared",
+    "anvil-overrides.typ",
+  );
+  await fs.copyFile(sharedOverridesSrc, path.join(buildDir, "anvil-overrides.typ"));
+
   const entrySource = buildTypstEntry({
     adapterRelPath,
     sharedFontsRelPath: "./anvil-fonts.typ",
     sharedCalloutsRelPath: "./anvil-callout.typ",
     sharedQuestionsRelPath: "./anvil-question.typ",
+    sharedOverridesRelPath: "./anvil-overrides.typ",
     usesAnvilFontWrapper: template.manifest.usesAnvilFontWrapper,
+    usesSharedOverrides: template.manifest.usesSharedOverrides,
     footnoteStyle: template.manifest.footnoteStyle,
     fonts,
     meta: input.template.meta,

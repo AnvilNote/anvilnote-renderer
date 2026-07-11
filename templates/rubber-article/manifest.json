@@ -128,5 +128,8 @@
     }
   ],
   "usesAnvilFontWrapper": true,
+  "supportsNumberedHeadings": true,
+  "supportsCustomMargins": true,
+  "usesSharedOverrides": true,
   "fontPolicy": "anvil-controlled"
 }

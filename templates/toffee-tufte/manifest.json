@@ -141,6 +141,9 @@
     }
   ],
   "usesAnvilFontWrapper": true,
+  "supportsNumberedHeadings": true,
+  "supportsCustomMargins": true,
+  "usesSharedOverrides": true,
   "fontPolicy": "anvil-controlled",
   "footnoteStyle": "sidenote",
   "textWidthCm": 11.6

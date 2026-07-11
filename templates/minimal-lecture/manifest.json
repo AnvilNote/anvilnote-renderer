@@ -8,6 +8,9 @@
     "entry": "template.typ"
   },
   "category": "note",
+  "supportsNumberedHeadings": true,
+  "supportsCustomMargins": true,
+  "usesSharedOverrides": true,
   "textWidthCm": 16.6,
   "fields": [
     {

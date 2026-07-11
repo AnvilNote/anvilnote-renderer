@@ -48,6 +48,10 @@ export type TemplateManifest = {
   supportsNumberedHeadings: boolean;
   /** Whether this template's adapter chain accepts margin-top/bottom/left/right args. */
   supportsCustomMargins: boolean;
+  /** Whether numbered-headings/margin overrides route through the shared
+   *  apply-anvil-overrides show rule instead of native anvil-template()
+   *  args — see template-loader.ts's own schema comment. */
+  usesSharedOverrides: boolean;
   /** Font ownership contract; always AnvilNote-controlled. */
   fontPolicy: "anvil-controlled";
   /** How footnoteReference nodes render in Typst — see template-loader.ts. */

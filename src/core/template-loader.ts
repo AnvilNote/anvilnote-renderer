@@ -49,6 +49,19 @@ const templateManifestSchema = z.object({
   // Same "Typst rejects an unrecognized named argument" reasoning as
   // supportsNumberedHeadings above, for margin-top/bottom/left/right.
   supportsCustomMargins: z.boolean().default(false),
+  // Whether numbered-headings/margin overrides are applied via the shared
+  // templates/shared/anvil-overrides.typ helper (a generic show-rule nested
+  // right after this template's own `#show: anvil-template.with(...)` in
+  // build-entry.ts's generated entry file, so it wins over whatever the
+  // wrapped @preview package set internally) rather than threaded as named
+  // arguments into anvil-template() itself. plain-note predates this
+  // mechanism and has its own bespoke implementation (including a custom
+  // TOC entry renderer with numbering logic build-entry.ts's blanket
+  // override doesn't know about), so it leaves this false and keeps using
+  // the native anvil-template() argument-threading path. Every other
+  // template — a thin adapter around a third-party package with no
+  // numbering/margin support of its own — sets this true.
+  usesSharedOverrides: z.boolean().default(false),
   fontPolicy: z.literal("anvil-controlled").default("anvil-controlled"),
   // How footnoteReference nodes render in Typst. Most templates use Typst's
   // native #footnote[...] (no import needed); margin-note-style templates

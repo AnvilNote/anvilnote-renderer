@@ -49,8 +49,17 @@ export type BuildTypstEntryInput = {
   sharedCalloutsRelPath: string;
   /** anvil-question.typ import path relative to the entry file. */
   sharedQuestionsRelPath: string;
+  /** anvil-overrides.typ import path relative to the entry file. */
+  sharedOverridesRelPath: string;
   /** Whether the renderer should wrap the template with apply-anvil-fonts. */
   usesAnvilFontWrapper?: boolean;
+  /** When true, numberedHeadings/margin*Cm are applied via a generic
+   *  `#show: apply-anvil-overrides.with(...)` rule nested right after
+   *  `#show: anvil-template.with(...)` (so it wins), instead of being
+   *  threaded as named arguments into anvil-template() itself. See
+   *  template-loader.ts's usesSharedOverrides doc comment — false only
+   *  for plain-note, which has its own native mechanism. */
+  usesSharedOverrides?: boolean;
   /** "sidenote" templates need that symbol imported from the adapter into
    *  the entry file's scope, since the generated `body` calls it directly
    *  as `#sidenote[...]` — "footnote" needs nothing (Typst builtin). */
@@ -143,6 +152,7 @@ const QUOTE_STYLE = [
 export function buildTypstEntry(input: BuildTypstEntryInput): string {
   const f = input.fonts;
   const usesAnvilFontWrapper = input.usesAnvilFontWrapper ?? true;
+  const usesSharedOverrides = input.usesSharedOverrides ?? false;
 
   const adapterSymbols =
     input.footnoteStyle === "sidenote" ? "anvil-template, sidenote" : "anvil-template";
@@ -151,6 +161,7 @@ export function buildTypstEntry(input: BuildTypstEntryInput): string {
     `#import "${input.sharedFontsRelPath}": ${usesAnvilFontWrapper ? "apply-anvil-fonts, " : ""}anvil-font-stacks`,
     `#import "${input.sharedCalloutsRelPath}": callout, proof`,
     `#import "${input.sharedQuestionsRelPath}": question-item, choices, answer-lines, answer-blank, answer-choice-image, question-blank, inline-blank`,
+    ...(usesSharedOverrides ? [`#import "${input.sharedOverridesRelPath}": apply-anvil-overrides`] : []),
     ...(input.usesMermaid ? [`#import "@preview/merman:0.1.0": mermaid`] : []),
     ...(input.usesSubpar ? [`#import "@preview/subpar:0.2.2"`] : []),
     `#import "${input.adapterRelPath}": ${adapterSymbols}`,
@@ -187,16 +198,45 @@ export function buildTypstEntry(input: BuildTypstEntryInput): string {
     `  meta: ${dictToTypst(input.meta)},`,
     `  options: ${dictToTypst(input.options)},`,
     `  fonts: _stacks,`,
-    ...(input.numberedHeadings !== undefined
+    ...(!usesSharedOverrides && input.numberedHeadings !== undefined
       ? [`  numbered-headings: ${input.numberedHeadings},`]
       : []),
-    ...(input.marginTopCm !== undefined ? [`  margin-top: ${input.marginTopCm}cm,`] : []),
-    ...(input.marginBottomCm !== undefined ? [`  margin-bottom: ${input.marginBottomCm}cm,`] : []),
-    ...(input.marginLeftCm !== undefined ? [`  margin-left: ${input.marginLeftCm}cm,`] : []),
-    ...(input.marginRightCm !== undefined ? [`  margin-right: ${input.marginRightCm}cm,`] : []),
+    ...(!usesSharedOverrides && input.marginTopCm !== undefined
+      ? [`  margin-top: ${input.marginTopCm}cm,`]
+      : []),
+    ...(!usesSharedOverrides && input.marginBottomCm !== undefined
+      ? [`  margin-bottom: ${input.marginBottomCm}cm,`]
+      : []),
+    ...(!usesSharedOverrides && input.marginLeftCm !== undefined
+      ? [`  margin-left: ${input.marginLeftCm}cm,`]
+      : []),
+    ...(!usesSharedOverrides && input.marginRightCm !== undefined
+      ? [`  margin-right: ${input.marginRightCm}cm,`]
+      : []),
     `)`,
     ``,
   );
+
+  // Nests INSIDE anvil-template (declared after it -> deeper -> wins), same
+  // ordering rule apply-anvil-fonts below relies on. Only emitted for
+  // templates whose anvil-template() doesn't natively accept these named
+  // args (see usesSharedOverrides doc comment above).
+  if (usesSharedOverrides) {
+    lines.push(
+      `#show: apply-anvil-overrides.with(`,
+      ...(input.numberedHeadings !== undefined
+        ? [`  numbered-headings: ${input.numberedHeadings},`]
+        : []),
+      ...(input.marginTopCm !== undefined ? [`  margin-top: ${input.marginTopCm}cm,`] : []),
+      ...(input.marginBottomCm !== undefined
+        ? [`  margin-bottom: ${input.marginBottomCm}cm,`]
+        : []),
+      ...(input.marginLeftCm !== undefined ? [`  margin-left: ${input.marginLeftCm}cm,`] : []),
+      ...(input.marginRightCm !== undefined ? [`  margin-right: ${input.marginRightCm}cm,`] : []),
+      `)`,
+      ``,
+    );
+  }
 
   if (usesAnvilFontWrapper) {
     lines.push(`#show: apply-anvil-fonts.with(stacks: _stacks)`, ``);
