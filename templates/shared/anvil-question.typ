@@ -81,13 +81,19 @@
     )
   }
 
+  // `columns` is no longer just 1/2/4 — choiceColumns() (anvilnote-
+  // renderer's own choice-columns.ts) now caps per tier against the
+  // ACTUAL entry count (e.g. 5 short choices -> 5, not a forced 4+1
+  // wrap), so this needs to build an arbitrary-width column tuple, not
+  // pick from 3 fixed cases. `(1fr,) * columns` is Typst array
+  // repetition — builds a tuple of `columns` copies of 1fr.
   block(above: 1em, below: 0.5em, {
     if columns == 1 {
       grid(columns: (1fr,), row-gutter: 0.8em, ..cells)
     } else if columns == 2 {
       grid(columns: (1fr, 1fr), column-gutter: 1em, row-gutter: 0.8em, ..cells)
     } else {
-      grid(columns: (1fr, 1fr, 1fr, 1fr), column-gutter: 0.5em, row-gutter: 0.8em, ..cells)
+      grid(columns: (1fr,) * columns, column-gutter: 0.5em, row-gutter: 0.8em, ..cells)
     }
   })
 }

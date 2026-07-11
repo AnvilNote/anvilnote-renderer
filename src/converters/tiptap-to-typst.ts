@@ -860,11 +860,16 @@ function renderBlock(node: TiptapNode, offset: number): string {
       // node.attrs.choices string array). Find it among this node's
       // children and render it via renderChoiceList; if somehow absent
       // (shouldn't happen post-migration, but don't crash if it is), no
-      // choices are emitted. multi forces 1 column — see
-      // renderChoiceList's own comment.
+      // choices are emitted. multi forces 1 column by DEFAULT
+      // (multiForceOneColumn, default true — matches the original
+      // always-forced behavior for existing documents) but can be
+      // switched to the same auto-column heuristic single-choice uses via
+      // a toggle next to the kind menu (anvilnote-web's
+      // question-item-node-view.tsx) — see renderChoiceList's own comment.
       const choiceListChild = asNodes(node.content).find((child) => child.type === "choiceList");
+      const forceOneColumn = kind === "multi" && node.attrs?.multiForceOneColumn !== false;
       const choicesArg = choiceListChild
-        ? `extra: ${renderChoiceList(choiceListChild, offset, kind === "multi")}`
+        ? `extra: ${renderChoiceList(choiceListChild, offset, forceOneColumn)}`
         : "";
       return `#question-item(${choicesArg})[${inner}]`;
     }
