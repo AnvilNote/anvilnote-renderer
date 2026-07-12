@@ -706,6 +706,28 @@ function typstAlignment(value: unknown): string | null {
     : null;
 }
 
+function cellAlignment(
+  attrs: Record<string, unknown> | undefined,
+  merged: boolean,
+): string | null {
+  const base = typstAlignment(attrs?.align);
+  const parts = base ? base.split(" + ") : [];
+  const vertical =
+    attrs?.verticalAlign === "middle"
+      ? "horizon"
+      : attrs?.verticalAlign === "top" || attrs?.verticalAlign === "bottom"
+        ? attrs.verticalAlign
+        : null;
+  if (vertical && !parts.includes(vertical)) parts.push(vertical);
+  if (
+    merged &&
+    !parts.some((part) => part === "horizon" || part === "top" || part === "bottom")
+  ) {
+    parts.push("horizon");
+  }
+  return parts.length > 0 ? parts.join(" + ") : null;
+}
+
 // Black-or-white cell text for a given fill — WCAG relative luminance
 // (sRGB linearization + Rec.709 weights) against the L = 0.179 threshold
 // where the contrast ratio vs. black equals the ratio vs. white. Kept in
@@ -727,11 +749,18 @@ function renderCell(cell: TiptapNode, offset: number, bold: boolean): string {
   const rendered = renderBlocks(asNodes(cell.content), offset)
     .replace(/\s*\n+\s*/g, " ")
     .trim();
-  let inner = bold && rendered ? `*${rendered}*` : rendered;
+  let inner = rendered
+    ? bold
+      ? `#text(font: _stacks.heading, weight: "bold")[${rendered}]`
+      : rendered
+    : // Word-like default row height: an empty cell props its row open to
+      // 0.45cm (kept in sync with the web editor's td/th min row height in
+      // globals.css) instead of collapsing to the inset alone.
+      "#box(height: 0.45cm)[]";
   const args: string[] = [];
   const colspan = positiveSpan(cell.attrs?.colspan);
   const rowspan = positiveSpan(cell.attrs?.rowspan);
-  const align = typstAlignment(cell.attrs?.align);
+  const align = cellAlignment(cell.attrs, colspan > 1 || rowspan > 1);
   const fill = typstColor(cell.attrs?.fill);
   const stroke = typstColor(cell.attrs?.stroke);
   const inset = typstLength(cell.attrs?.inset);
@@ -768,39 +797,75 @@ function renderCells(cells: TiptapNode[], offset: number, bold: boolean): string
   return cells.map((cell) => renderCell(cell, offset, bold));
 }
 
-function tableColumnCount(rows: TiptapNode[]): number {
-  return Math.max(
-    1,
-    ...rows.map((row) =>
-      asNodes(row.content).reduce(
-        (count, cell) => count + positiveSpan(cell.attrs?.colspan),
-        0,
-      ),
-    ),
-  );
-}
+type TableCellPlacement = {
+  cell: TiptapNode;
+  column: number;
+};
 
-function renderColumnTracks(rows: TiptapNode[], columns: number): string {
-  if (columns === 1) return "1";
-  const widths: Array<number | null> = Array(columns).fill(null);
-  for (const row of rows) {
-    let column = 0;
+function tableLayout(rows: TiptapNode[]): {
+  placements: TableCellPlacement[];
+  columns: number;
+} {
+  const active: Array<{ column: number; colspan: number; untilRow: number }> = [];
+  const placements: TableCellPlacement[] = [];
+  let columns = 1;
+
+  rows.forEach((row, rowIndex) => {
+    for (let index = active.length - 1; index >= 0; index -= 1) {
+      if (active[index].untilRow <= rowIndex) active.splice(index, 1);
+    }
+
+    const occupied = new Set<number>();
+    for (const span of active) {
+      for (let column = span.column; column < span.column + span.colspan; column += 1) {
+        occupied.add(column);
+      }
+    }
+
+    let cursor = 0;
     for (const cell of asNodes(row.content)) {
       const colspan = positiveSpan(cell.attrs?.colspan);
-      const colwidth = Array.isArray(cell.attrs?.colwidth) ? cell.attrs.colwidth : [];
-      for (let index = 0; index < colspan; index += 1) {
-        const width = colwidth[index];
-        if (widths[column + index] === null && typeof width === "number" && width > 0) {
-          widths[column + index] = width;
-        }
+      const rowspan = positiveSpan(cell.attrs?.rowspan);
+      while (
+        Array.from({ length: colspan }, (_, offset) => cursor + offset).some((column) =>
+          occupied.has(column),
+        )
+      ) {
+        cursor += 1;
       }
-      column += colspan;
+      placements.push({ cell, column: cursor });
+      for (let column = cursor; column < cursor + colspan; column += 1) {
+        occupied.add(column);
+      }
+      if (rowspan > 1) {
+        active.push({ column: cursor, colspan, untilRow: rowIndex + rowspan });
+      }
+      columns = Math.max(columns, cursor + colspan);
+      cursor += colspan;
+    }
+  });
+
+  return { placements, columns };
+}
+
+function renderColumnTracks(placements: TableCellPlacement[], columns: number): string {
+  const widths: Array<number | null> = Array(columns).fill(null);
+  for (const { cell, column } of placements) {
+    const colspan = positiveSpan(cell.attrs?.colspan);
+    const colwidth = Array.isArray(cell.attrs?.colwidth) ? cell.attrs.colwidth : [];
+    for (let index = 0; index < colspan; index += 1) {
+      const width = colwidth[index];
+      if (widths[column + index] === null && typeof width === "number" && width > 0) {
+        widths[column + index] = width;
+      }
     }
   }
-  const tracks = widths.every((width) => width !== null)
-    ? widths.map((width) => `${typstNumber(width ?? 1)}fr`)
-    : widths.map(() => "1fr");
-  return `(${tracks.join(", ")})`;
+  const known = widths.filter((width): width is number => width !== null);
+  const fallback = known.length > 0
+    ? known.reduce((sum, width) => sum + width, 0) / known.length
+    : 1;
+  const tracks = widths.map((width) => `${typstNumber(width ?? fallback)}fr`);
+  return columns === 1 ? `(${tracks[0]},)` : `(${tracks.join(", ")})`;
 }
 
 function renderRowTracks(rows: TiptapNode[]): string | null {
@@ -821,7 +886,7 @@ function renderTable(node: TiptapNode, offset: number): string {
   if (rows.length === 0) {
     return "";
   }
-  const columns = tableColumnCount(rows);
+  const layout = tableLayout(rows);
   const variant =
     node.attrs?.variant === "three-line" ? "three-line" : "normal";
   const alignAttr = String(node.attrs?.align ?? "center");
@@ -844,7 +909,10 @@ function renderTable(node: TiptapNode, offset: number): string {
     bodyCells.push(...renderCells(asNodes(row.content), offset, false));
   }
 
-  const args: string[] = [`columns: ${renderColumnTracks(rows, columns)}`];
+  const args: string[] = [
+    `columns: ${renderColumnTracks(layout.placements, layout.columns)}`,
+    "inset: (x: 0.19cm, y: 0.05cm)",
+  ];
   const rowTracks = renderRowTracks(rows);
   if (rowTracks) args.push(`rows: ${rowTracks}`);
   if (variant === "three-line") {
