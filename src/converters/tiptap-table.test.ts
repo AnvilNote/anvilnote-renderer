@@ -115,7 +115,9 @@ test("keeps styled header cells inside table.header", () => {
 
   assert.match(
     body,
-    /table\.header\(table\.cell\(fill: rgb\("#abcdef"\)\)\[#text\(font: _stacks\.heading, weight: "bold"\)\[Heading\]\]\)/,
+    // align: horizon is the unconditional vertical-center default every
+    // cell now gets (see cellAlignment).
+    /table\.header\(table\.cell\(align: horizon, fill: rgb\("#abcdef"\)\)\[#text\(font: _stacks\.heading, weight: "bold"\)\[Heading\]\]\)/,
   );
   assert.match(body, /columns: \(1fr,\)/);
 });

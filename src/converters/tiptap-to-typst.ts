@@ -708,7 +708,6 @@ function typstAlignment(value: unknown): string | null {
 
 function cellAlignment(
   attrs: Record<string, unknown> | undefined,
-  merged: boolean,
 ): string | null {
   const base = typstAlignment(attrs?.align);
   const parts = base ? base.split(" + ") : [];
@@ -719,10 +718,10 @@ function cellAlignment(
         ? attrs.verticalAlign
         : null;
   if (vertical && !parts.includes(vertical)) parts.push(vertical);
-  if (
-    merged &&
-    !parts.some((part) => part === "horizon" || part === "top" || part === "bottom")
-  ) {
+  // EVERY cell (merged or not) defaults to vertical center — per explicit
+  // product decision, matching the web editor's `vertical-align: middle`
+  // on td/th — unless the verticalAlign attr explicitly picked a side.
+  if (!parts.some((part) => part === "horizon" || part === "top" || part === "bottom")) {
     parts.push("horizon");
   }
   return parts.length > 0 ? parts.join(" + ") : null;
@@ -746,8 +745,12 @@ function fillIsDark(hexFill: string): boolean {
 }
 
 function renderCell(cell: TiptapNode, offset: number, bold: boolean): string {
+  // Paragraph breaks inside a cell become REAL line breaks (Typst `\`) —
+  // previously collapsed to a single space, so pressing Enter inside a
+  // cell in the editor visually broke the line there but the PDF ran it
+  // all together on one line.
   const rendered = renderBlocks(asNodes(cell.content), offset)
-    .replace(/\s*\n+\s*/g, " ")
+    .replace(/\s*\n+\s*/g, " \\ ")
     .trim();
   let inner = rendered
     ? bold
@@ -760,7 +763,7 @@ function renderCell(cell: TiptapNode, offset: number, bold: boolean): string {
   const args: string[] = [];
   const colspan = positiveSpan(cell.attrs?.colspan);
   const rowspan = positiveSpan(cell.attrs?.rowspan);
-  const align = cellAlignment(cell.attrs, colspan > 1 || rowspan > 1);
+  const align = cellAlignment(cell.attrs);
   const fill = typstColor(cell.attrs?.fill);
   const stroke = typstColor(cell.attrs?.stroke);
   const inset = typstLength(cell.attrs?.inset);
