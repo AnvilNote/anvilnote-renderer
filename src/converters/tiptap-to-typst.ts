@@ -706,11 +706,28 @@ function typstAlignment(value: unknown): string | null {
     : null;
 }
 
+// Black-or-white cell text for a given fill — WCAG relative luminance
+// (sRGB linearization + Rec.709 weights) against the L = 0.179 threshold
+// where the contrast ratio vs. black equals the ratio vs. white. Kept in
+// sync manually with anvilnote-web's table-attributes.ts copy (same
+// no-shared-package convention as question-choices).
+function fillIsDark(hexFill: string): boolean {
+  const hex = hexFill.replace(/^#/, "");
+  const short = hex.length === 3 || hex.length === 4;
+  const channel = (index: number) => {
+    const raw = short ? hex[index] + hex[index] : hex.slice(index * 2, index * 2 + 2);
+    const value = parseInt(raw, 16) / 255;
+    return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+  };
+  const luminance = 0.2126 * channel(0) + 0.7152 * channel(1) + 0.0722 * channel(2);
+  return luminance <= 0.179;
+}
+
 function renderCell(cell: TiptapNode, offset: number, bold: boolean): string {
   const rendered = renderBlocks(asNodes(cell.content), offset)
     .replace(/\s*\n+\s*/g, " ")
     .trim();
-  const inner = bold && rendered ? `*${rendered}*` : rendered;
+  let inner = bold && rendered ? `*${rendered}*` : rendered;
   const args: string[] = [];
   const colspan = positiveSpan(cell.attrs?.colspan);
   const rowspan = positiveSpan(cell.attrs?.rowspan);
@@ -718,6 +735,19 @@ function renderCell(cell: TiptapNode, offset: number, bold: boolean): string {
   const fill = typstColor(cell.attrs?.fill);
   const stroke = typstColor(cell.attrs?.stroke);
   const inset = typstLength(cell.attrs?.inset);
+
+  // Mirrors the web editor's automatic black/white text flip on filled
+  // cells (extensions.ts's fill renderHTML) so the PDF matches what the
+  // editor shows. Typst's table.cell has no text-color argument, so the
+  // flip wraps the content itself.
+  if (
+    fill &&
+    typeof cell.attrs?.fill === "string" &&
+    fillIsDark(cell.attrs.fill) &&
+    inner
+  ) {
+    inner = `#text(fill: white)[${inner}]`;
+  }
 
   if (colspan > 1) args.push(`colspan: ${colspan}`);
   if (rowspan > 1) args.push(`rowspan: ${rowspan}`);
