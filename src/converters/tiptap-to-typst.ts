@@ -943,8 +943,20 @@ function renderBlock(node: TiptapNode, offset: number): string {
       }
       return `$ ${typst} $`;
     }
-    case "horizontalRule":
-      return "#line(length: 100%, stroke: 0.5pt)";
+    case "horizontalRule": {
+      const thickness = typeof node.attrs?.thicknessPt === "number" ? node.attrs.thicknessPt : 0.5;
+      const lineStyle = typeof node.attrs?.lineStyle === "string" ? node.attrs.lineStyle : "solid";
+      // Typst's own dash-pattern keyword names — "dashdot" (this codebase's
+      // attr value, matching CSS/OOXML naming conventions elsewhere) maps
+      // to Typst's "dash-dotted".
+      const dash: Record<string, string> = {
+        dashed: "dashed",
+        dotted: "dotted",
+        dashdot: "dash-dotted",
+      };
+      const dashArg = dash[lineStyle] ? `, dash: "${dash[lineStyle]}"` : "";
+      return `#line(length: 100%, stroke: (thickness: ${thickness}pt${dashArg}))`;
+    }
     case "functionPlot": {
       const svg = typeof node.attrs?.svg === "string" ? node.attrs.svg : "";
       if (!svg.trim()) return "";
