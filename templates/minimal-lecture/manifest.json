@@ -9,7 +9,7 @@
   },
   "category": "note",
   "supportsNumberedHeadings": true,
-  "supportsCustomMargins": true,
+  "supportsCustomMargins": false,
   "usesSharedOverrides": true,
   "textWidthCm": 16.6,
   "fields": [

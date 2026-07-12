@@ -164,7 +164,7 @@
   ],
   "usesAnvilFontWrapper": true,
   "supportsNumberedHeadings": true,
-  "supportsCustomMargins": true,
+  "supportsCustomMargins": false,
   "usesSharedOverrides": true,
   "fontPolicy": "anvil-controlled"
 }
