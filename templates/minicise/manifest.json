@@ -17,6 +17,7 @@
   "fonts": [],
   "headingOffset": 0,
   "textWidthCm": 16,
+  "textHeightCm": 22.2,
   "fields": [
     {
       "key": "title",

@@ -12,6 +12,7 @@
   "supportsCustomMargins": false,
   "usesSharedOverrides": true,
   "textWidthCm": 16.6,
+  "textHeightCm": 24.9,
   "fields": [
     {
       "key": "title",
