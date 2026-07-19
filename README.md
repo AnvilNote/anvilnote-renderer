@@ -1,18 +1,22 @@
-# anvilnote-renderer
+# AnvilNote Renderer
 
-`anvilnote-renderer` is the dedicated CLI renderer for AnvilNote. It owns:
+`anvilnote-renderer` is the dedicated PDF rendering CLI for AnvilNote. It converts the current AnvilNote Tiptap document JSON into Typst, compiles it with a selected template, and returns a machine-readable result to `anvilnote-api`.
 
-- BlockNote JSON to Typst conversion
-- Typst escaping helpers
-- Typst templates and template manifests
-- Typst CLI compilation
-- machine-readable render results for the API
+The renderer remains separate so the API can focus on documents, templates, jobs, and HTTP concerns. AnvilNote Desktop bundles the built renderer and Typst executable for end users. This process never handles OpenAI API keys; Smart Mode output must first become an accepted AnvilNote document before it can be rendered.
 
-The AnvilNote backend is Node.js/Express. This renderer delegates PDF generation to Typst. The “Rust-powered” part refers to Typst, not to the backend language.
+## Document input
 
-## Why It Is Separate
+The canonical input is an AnvilNote document whose `content` field contains a
+one-element array with a Tiptap `doc` node.
 
-`anvilnote-api` should stay focused on documents, templates metadata, render jobs, and HTTP concerns. This repo isolates all Typst-specific rendering logic behind a CLI boundary.
+The Tiptap converter supports the document structures used by the editor, including headings, lists, tables, math, code blocks, images, callouts, proofs with QED, questions, footnotes, and cross-references.
+
+## Requirements
+
+- Node.js and pnpm for source development
+- [Typst](https://typst.app/open-source/) on `PATH`, or a custom executable supplied through `TYPST_BIN`
+
+Packaged AnvilNote Desktop releases already include Typst. Desktop users do not need to install it separately.
 
 ## Setup
 
@@ -22,59 +26,15 @@ cp .env.example .env
 pnpm build
 ```
 
-## Environment
+Environment variables:
 
 ```env
 TYPST_BIN=typst
-ANVILNOTE_FONT_DIR=./fonts          # bundled fonts (Docker: /app/fonts)
-ANVILNOTE_IGNORE_SYSTEM_FONTS=true  # only use the bundle, never system fonts
+ANVILNOTE_FONT_DIR=./fonts
+ANVILNOTE_IGNORE_SYSTEM_FONTS=true
 ```
 
-## Fonts
-
-AnvilNote renders from a **fixed, bundled font set** (`fonts/`) and compiles
-with `--font-path ./fonts --ignore-system-fonts`, so output never depends on
-system fonts. Font policy (which family is used for title / meta / body /
-heading / code / math) is owned centrally by `src/config/fonts.ts` and
-`templates/shared/anvil-fonts.typ`; **templates control layout only, never
-fonts** (`pnpm templates:lint` enforces this on each `template.typ`).
-
-```bash
-pnpm fonts:download   # fetch the open-source fonts
-pnpm fonts:list       # families Typst sees from the bundle
-pnpm fonts:verify     # assert every required family is present
-pnpm templates:lint   # assert no template sets its own fonts
-```
-
-### Per-render font options
-
-These template options let the user steer the bundled stacks (the renderer
-validates them and rebuilds the stacks; the body/heading/code/math wrapper
-applies to every template, while title/author/date chrome honors them in
-AnvilNote-native templates such as plain-note):
-
-| Option        | Values                                   | Effect |
-| ------------- | ---------------------------------------- | ------ |
-| `primaryLang` | `zh` · `en` · `ja` · `ko` · `th`         | Moves that language's face to the front of every stack |
-| `titleFont`   | `taiwan-pearl` · `source-han`            | CJK face for title / heading (台灣圓體 vs 思源黑體) |
-| `bodyFont`    | `song` · `kai`                           | CJK face for body / author (宋體 vs 楷書) |
-| `dateFont`    | `playfair` · `tai-heritage`              | Author/date display face |
-| `mathMode`    | `default` · `garamond`                   | New Computer Modern Math vs Garamond-Math |
-
-All default to the AnvilNote baseline (`zh` / `taiwan-pearl` / `song` / `playfair` /
-`default`). Unknown values fall back to the default — never to a system font.
-
-## Typst Requirement
-
-Typst must be installed locally:
-
-```bash
-typst --version
-```
-
-If Typst is not on your `PATH`, set `TYPST_BIN` in `.env`.
-
-## CLI Usage
+## CLI usage
 
 ```bash
 pnpm --silent render \
@@ -83,29 +43,45 @@ pnpm --silent render \
   --work-dir /absolute/path/to/typst-work-dir
 ```
 
-## Render Input JSON
+`stdout` is reserved for one machine-readable JSON result. Human-readable diagnostics go to `stderr`. Use `pnpm --silent render` in scripts so pnpm does not add its own banner to standard output.
+
+## Render input
 
 ```json
 {
   "document": {
     "id": "document-id",
     "title": "Lecture 01",
-    "content": []
+    "content": [
+      {
+        "type": "doc",
+        "content": []
+      }
+    ]
   },
   "template": {
-    "id": "minimal-lecture",
-    "fields": {
-      "author": "Anthony",
-      "date": "2026-06-26"
+    "slug": "plain-note",
+    "meta": {
+      "author": "Example Author",
+      "date": "2026-07-20"
+    },
+    "options": {
+      "primaryLang": "en",
+      "toc": true
     }
   },
+  "numberedHeadings": true,
   "options": {
-    "format": "pdf"
+    "format": "pdf",
+    "pageSize": "A4",
+    "includeMetadata": true
   }
 }
 ```
 
-## Render Output JSON
+The input schema also accepts optional positive `marginTopCm`, `marginBottomCm`, `marginLeftCm`, and `marginRightCm` values when the selected template supports custom margins.
+
+## Render output
 
 Success:
 
@@ -138,22 +114,72 @@ Failure:
 }
 ```
 
-`stdout` is reserved for machine-readable JSON. Human-readable logs go to `stderr`. Use `pnpm --silent render` for scripting so the package manager does not prepend its own script banner to stdout.
+## Fonts
+
+Rendering uses the fixed font bundle under `fonts/` together with `--font-path` and `--ignore-system-fonts`, so output does not silently change with the host computer. Shared font policy is defined in `src/config/fonts.ts` and `templates/shared/anvil-fonts.typ`; templates control layout rather than replacing the font policy.
+
+Useful font checks:
+
+```bash
+pnpm fonts:download
+pnpm fonts:list
+pnpm fonts:verify
+pnpm templates:lint
+```
+
+Template options can change the preferred language and bundled font stacks:
+
+| Option | Values | Purpose |
+| --- | --- | --- |
+| `primaryLang` | `zh`, `en`, `ja`, `ko`, `th` | Prioritizes the corresponding bundled language face |
+| `titleFont` | `taiwan-pearl`, `source-han` | Selects the title and heading CJK face |
+| `bodyFont` | `song`, `kai` | Selects the body CJK face |
+| `dateFont` | `playfair`, `tai-heritage` | Selects the author and date display face |
+| `mathMode` | `default`, `garamond` | Selects the bundled math stack |
+
+Unknown values fall back to the AnvilNote defaults, never to an arbitrary system font.
 
 ## Templates
 
-Templates live under `templates/<template-id>/`:
+Templates live under `templates/<template-slug>/` and contain a manifest plus a Typst adapter:
 
-```txt
+```text
 templates/
-  minimal-lecture/
+  plain-note/
     manifest.json
     template.typ
 ```
 
-## Adding a Template
+To add a template:
 
-1. Create `templates/<new-id>/manifest.json`
-2. Create `templates/<new-id>/template.typ`
-3. Use the new template id in the render input JSON
-4. Keep stdout JSON-only so the API contract remains stable
+1. Create `templates/<new-slug>/manifest.json`.
+2. Create `templates/<new-slug>/template.typ`.
+3. Run `pnpm templates:lint`.
+4. Use the new slug in the render input.
+
+## Commands
+
+```bash
+pnpm build
+pnpm build:desktop
+pnpm lint
+pnpm templates:lint
+pnpm fonts:verify
+```
+
+Use the complete command under [CLI usage](#cli-usage) when invoking the
+`render` script; both `render` and `start` require input and output arguments.
+
+This repository does not currently define a separate `pnpm test` script. The
+available package-level checks are linting, template linting, and font
+verification; adding a packaged converter test command remains a follow-up.
+
+## Related repositories
+
+- [AnvilNote API](https://github.com/AnvilNote/anvilnote-api) creates render jobs and invokes this CLI.
+- [AnvilNote Desktop](https://github.com/AnvilNote/anvilnote-desktop) packages the built renderer and Typst executable.
+- [AnvilNote Web](https://github.com/AnvilNote/anvilnote-web) produces the current Tiptap document format.
+
+## License
+
+This repository is licensed under the [MIT License](LICENSE).
