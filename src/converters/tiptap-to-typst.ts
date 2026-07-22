@@ -387,6 +387,7 @@ let insideBlockquote = false;
 // Han ideographs (main block + extension A + compatibility) plus CJK
 // punctuation/fullwidth forms, so a Chinese sentence's own punctuation
 // stays classified as CJK instead of flipping to the Latin/italic run.
+// eslint-disable-next-line no-irregular-whitespace -- the regex intentionally includes the CJK Ideographic Space range.
 const CJK_PATTERN = /[一-鿿㐀-䶿豈-﫿　-〿＀-￯]/;
 
 // Splits text into runs of consecutive CJK vs. non-CJK characters, e.g.

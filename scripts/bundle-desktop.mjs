@@ -1,3 +1,5 @@
+/* global console */
+
 // Bundle the renderer CLI into a single self-contained dist/cli.js so the
 // desktop app can run it under Electron's Node runtime with NO external
 // node_modules. Templates and fonts are read at runtime (from cwd / env), not
