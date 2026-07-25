@@ -1167,13 +1167,15 @@ function renderBlock(node: TiptapNode, offset: number): string {
       return `#line(length: 100%, stroke: (thickness: ${thickness}pt${dashArg}))`;
     }
     case "functionPlot": {
-      const svg = typeof node.attrs?.svg === "string" ? node.attrs.svg : "";
-      if (!svg.trim()) return "";
+      const pdf = typeof node.attrs?.pdf === "string" ? node.attrs.pdf : "";
+      if (!pdf.trim()) return "";
       // Reuses the exact same embedding path as a regular image node — the
-      // cached SVG was already fully rendered client-side (see
-      // anvilnote-web's function-plot-dialog.tsx); no new Typst logic needed
-      // here, matching the spec's "renderer 零新增邏輯" decision.
-      const dataUrl = `data:image/svg+xml;base64,${Buffer.from(svg, "utf8").toString("base64")}`;
+      // PDF was already fully rendered server-side by anvilnote-funcs
+      // (sympy + pgfplots/TikZ + tectonic), and Typst 0.14+ embeds PDF
+      // images natively via image(), so no new Typst logic is needed here
+      // (same "renderer 零新增邏輯" decision as the old SVG version this
+      // replaces — see prompt/spec/project-function-plot.md).
+      const dataUrl = `data:application/pdf;base64,${pdf}`;
       return renderImage({ ...node, attrs: { ...node.attrs, src: dataUrl } });
     }
     case "statsChart": {
