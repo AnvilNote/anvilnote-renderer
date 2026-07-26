@@ -1203,6 +1203,10 @@ function renderBlock(node: TiptapNode, offset: number, listDepth = 0): string {
       const dashArg = dash[lineStyle] ? `, dash: "${dash[lineStyle]}"` : "";
       return `#line(length: 100%, stroke: (thickness: ${thickness}pt${dashArg}))`;
     }
+    case "pageBreak":
+      return node.attrs?.weak === true
+        ? "#pagebreak(weak: true)"
+        : "#pagebreak()";
     case "functionPlot": {
       const pdf = typeof node.attrs?.pdf === "string" ? node.attrs.pdf : "";
       if (!pdf.trim()) return "";

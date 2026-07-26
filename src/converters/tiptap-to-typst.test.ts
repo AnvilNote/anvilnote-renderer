@@ -156,3 +156,25 @@ test("mixed nested lists restart their marker hierarchy", () => {
   assert.match(body, /#list\(\s*marker: \[•\]/);
   assert.match(body, /#enum\(\s*numbering: "1\."/);
 });
+
+test("pageBreak renders a forced Typst page break", () => {
+  const { body } = tiptapToTypst([
+    {
+      type: "doc",
+      content: [{ type: "pageBreak", attrs: { weak: false } }],
+    },
+  ]);
+
+  assert.equal(body.trim(), "#pagebreak()");
+});
+
+test("weak pageBreak renders a weak Typst page break", () => {
+  const { body } = tiptapToTypst([
+    {
+      type: "doc",
+      content: [{ type: "pageBreak", attrs: { weak: true } }],
+    },
+  ]);
+
+  assert.equal(body.trim(), "#pagebreak(weak: true)");
+});
