@@ -974,8 +974,17 @@ function renderBlock(node: TiptapNode, offset: number): string {
       // have something to jump to.
       return `${"=".repeat(level)} ${inlineToTypst(node.content)}${labelSuffix}`.trim();
     }
-    case "paragraph":
-      return inlineToTypst(node.content);
+    case "paragraph": {
+      const text = inlineToTypst(node.content);
+      const rawIndent = node.attrs?.indent;
+      const indent =
+        typeof rawIndent === "number" && Number.isFinite(rawIndent)
+          ? clamp(Math.trunc(rawIndent), 0, 8)
+          : 0;
+      return indent > 0
+        ? `#block(inset: (left: ${indent * 2}em))[${text}]`
+        : text;
+    }
     case "bulletList":
       return renderList(node, offset, "-");
     case "orderedList":

@@ -30,3 +30,20 @@ test("functionPlot node with no cached pdf renders nothing", () => {
   );
   assert.equal(body.trim(), "");
 });
+
+test("paragraph indentation is preserved in Typst output", () => {
+  const { body } = tiptapToTypst([
+    {
+      type: "doc",
+      content: [
+        {
+          type: "paragraph",
+          attrs: { indent: 2 },
+          content: [{ type: "text", text: "Indented paragraph" }],
+        },
+      ],
+    },
+  ]);
+
+  assert.equal(body.trim(), "#block(inset: (left: 4em))[Indented paragraph]");
+});
