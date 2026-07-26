@@ -655,7 +655,9 @@ function renderList(
       .map((child) => {
         const childDepth =
           child.type === "bulletList" || child.type === "orderedList"
-            ? depth + 1
+            ? child.type === node.type
+              ? depth + 1
+              : 0
             : depth;
         return renderBlock(child, offset, childDepth);
       })

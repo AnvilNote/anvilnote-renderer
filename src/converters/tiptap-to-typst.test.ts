@@ -111,3 +111,48 @@ test("bullet list markers follow the configured nesting hierarchy", () => {
   assert.match(body, /#list\(\s*marker: \[▪\]/);
   assert.match(body, /#list\(\s*marker: \[–\]/);
 });
+
+test("mixed nested lists restart their marker hierarchy", () => {
+  const { body } = tiptapToTypst([
+    {
+      type: "doc",
+      content: [
+        {
+          type: "orderedList",
+          content: [
+            {
+              type: "listItem",
+              content: [
+                {
+                  type: "paragraph",
+                  content: [{ type: "text", text: "Ordered parent" }],
+                },
+                nestedList("bulletList", ["Bullet child"]),
+              ],
+            },
+          ],
+        },
+        {
+          type: "bulletList",
+          content: [
+            {
+              type: "listItem",
+              content: [
+                {
+                  type: "paragraph",
+                  content: [{ type: "text", text: "Bullet parent" }],
+                },
+                nestedList("orderedList", ["Ordered child"]),
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  ]);
+
+  assert.doesNotMatch(body, /#list\(\s*marker: \[◦\]/);
+  assert.doesNotMatch(body, /#enum\(\s*numbering: "\(1\)"/);
+  assert.match(body, /#list\(\s*marker: \[•\]/);
+  assert.match(body, /#enum\(\s*numbering: "1\."/);
+});
