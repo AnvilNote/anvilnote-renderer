@@ -634,26 +634,52 @@ function textContent(content: unknown): string {
     .join("");
 }
 
-function renderList(node: TiptapNode, offset: number, marker: "-" | "+"): string {
-  const lines: string[] = [];
-  for (const item of asNodes(node.content)) {
-    const inlineParts: string[] = [];
-    const nestedParts: string[] = [];
-    for (const child of asNodes(item.content)) {
-      if (
-        child.type === "bulletList" ||
-        child.type === "orderedList" ||
-        child.type === "taskList"
-      ) {
-        nestedParts.push(indentLines(renderBlock(child, offset), "  "));
-      } else {
-        inlineParts.push(renderBlock(child, offset));
-      }
-    }
-    lines.push(`${marker} ${inlineParts.join(" ").trim()}`.trim());
-    lines.push(...nestedParts);
+const ORDERED_LIST_NUMBERING = ["1.", "(1)", "①", "a.", "(a)"] as const;
+const BULLET_LIST_MARKERS = ["•", "◦", "▪", "–"] as const;
+
+function listStyleAtDepth<const T extends readonly string[]>(
+  styles: T,
+  depth: number,
+): T[number] {
+  return styles[Math.min(Math.max(depth, 0), styles.length - 1)];
+}
+
+function renderList(
+  node: TiptapNode,
+  offset: number,
+  ordered: boolean,
+  depth: number,
+): string {
+  const items = asNodes(node.content).map((item) => {
+    const inner = asNodes(item.content)
+      .map((child) => {
+        const childDepth =
+          child.type === "bulletList" || child.type === "orderedList"
+            ? depth + 1
+            : depth;
+        return renderBlock(child, offset, childDepth);
+      })
+      .filter(Boolean)
+      .join("\n");
+
+    return `[\n${indentLines(inner, "  ")}\n]`;
+  });
+
+  if (ordered) {
+    const numbering = listStyleAtDepth(ORDERED_LIST_NUMBERING, depth);
+    const rawStart = node.attrs?.start;
+    const start =
+      typeof rawStart === "number" && Number.isInteger(rawStart) && rawStart > 1
+        ? `\n  start: ${rawStart},`
+        : "";
+    return `#enum(\n  numbering: "${numbering}",${start}\n${indentLines(
+      items.join(",\n"),
+      "  ",
+    )},\n)`;
   }
-  return lines.join("\n");
+
+  const marker = listStyleAtDepth(BULLET_LIST_MARKERS, depth);
+  return `#list(\n  marker: [${marker}],\n${indentLines(items.join(",\n"), "  ")},\n)`;
 }
 
 function renderTaskList(node: TiptapNode, offset: number): string {
@@ -952,7 +978,7 @@ function renderTable(node: TiptapNode, offset: number): string {
   return `#align(${align})[\n${indentLines(figureSrc, "  ")}\n]`;
 }
 
-function renderBlock(node: TiptapNode, offset: number): string {
+function renderBlock(node: TiptapNode, offset: number, listDepth = 0): string {
   const type = typeof node.type === "string" ? node.type : "paragraph";
 
   switch (type) {
@@ -986,9 +1012,9 @@ function renderBlock(node: TiptapNode, offset: number): string {
         : text;
     }
     case "bulletList":
-      return renderList(node, offset, "-");
+      return renderList(node, offset, false, listDepth);
     case "orderedList":
-      return renderList(node, offset, "+");
+      return renderList(node, offset, true, listDepth);
     case "taskList":
       return renderTaskList(node, offset);
     case "blockquote": {
