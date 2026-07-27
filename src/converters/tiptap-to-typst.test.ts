@@ -91,9 +91,55 @@ test("ordered list markers follow the configured nesting hierarchy", () => {
 
   assert.match(body, /#enum\(\s*numbering: "1\."/);
   assert.match(body, /#enum\(\s*numbering: "\(1\)"/);
-  assert.match(body, /#enum\(\s*numbering: "①"/);
+  // Level 3 (circled numbers) is a generated Typst numbering FUNCTION, not
+  // a plain "①" pattern string — Typst's own numbering() only recognizes
+  // 1/a/A/i/I as counting kinds, so a literal "①" pattern would be constant
+  // text, never incrementing to ②③④... (a real bug this replaces; see
+  // list-markers.ts's own comment).
+  assert.match(body, /#enum\(\s*numbering: \(n\) => \{ let syms = \("①", "②"/);
   assert.match(body, /#enum\(\s*numbering: "a\."/);
-  assert.match(body, /#enum\(\s*numbering: "\(a\)"/);
+  // Level 5's default module changed from parenthesized-alpha to roman
+  // numerals when the marker catalog became user-configurable (Settings >
+  // List markers) — see anvilnote-web's settings-store.ts DEFAULT_ORDERED_LIST_LEVELS.
+  assert.match(body, /#enum\(\s*numbering: "i\."/);
+});
+
+test("a list item with multiple paragraphs renders each as its own Typst paragraph", () => {
+  // Regression: joining a listItem's block children with a single "\n"
+  // produced ONE Typst paragraph (Typst only breaks paragraphs on a BLANK
+  // line) — "Parent"/"ChildXYZ" ran together as "Parent ChildXYZ" in the
+  // rendered PDF instead of showing ChildXYZ as an indented continuation
+  // line. This is the shape a demoted list item (anvilnote-web's
+  // list-item-demote.ts) produces: a listItem whose content is two
+  // paragraphs, no nested list in between.
+  const { body } = tiptapToTypst([
+    {
+      type: "doc",
+      content: [
+        {
+          type: "orderedList",
+          content: [
+            {
+              type: "listItem",
+              content: [
+                { type: "paragraph", content: [{ type: "text", text: "Parent" }] },
+                { type: "paragraph", content: [{ type: "text", text: "ChildXYZ" }] },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  ]);
+
+  assert.match(body, /Parent\n\s*\n\s*ChildXYZ/);
+  // Regression: templates commonly set a document-wide paragraph
+  // first-line-indent (e.g. plain-note/upstream.typ's `all: false` — every
+  // paragraph but a container's first gets an extra indent). Without
+  // resetting it inside the item body, "ChildXYZ" — the item's SECOND
+  // paragraph — picked up that indent on top of the list's own hanging
+  // indent, landing visibly further right than "Parent" in the PDF.
+  assert.match(body, /\[\s*#set par\(first-line-indent: 0pt\)/);
 });
 
 test("bullet list markers follow the configured nesting hierarchy", () => {

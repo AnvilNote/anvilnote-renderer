@@ -2,6 +2,28 @@ import { z } from "zod";
 
 const fieldValueSchema = z.union([z.string(), z.boolean(), z.null()]);
 
+// Mirrors list-markers.ts's own OrderedListModuleId/UnorderedListSymbol
+// unions (kept as a separate literal list here, not imported, since this
+// schema module has no reason to depend on the converter internals it's
+// merely validating input for).
+const orderedListModuleSchema = z.enum([
+  "arabic",
+  "paren-arabic",
+  "circled",
+  "alpha-lower",
+  "alpha-upper",
+  "roman-lower",
+  "roman-upper",
+  "chinese-numeral",
+  "japanese-formal",
+  "japanese-informal",
+  "korean-hangul",
+  "thai-consonant",
+]);
+const unorderedListSymbolSchema = z.enum([
+  "•", "◦", "▪", "–", "■", "□", "▲", "▼", "◀", "▶", "◆", "◇",
+]);
+
 export const renderInputSchema = z.object({
   document: z.object({
     id: z.string().min(1),
@@ -24,6 +46,8 @@ export const renderInputSchema = z.object({
       format: z.literal("pdf").default("pdf"),
       pageSize: z.enum(["A4", "Letter"]).optional(),
       includeMetadata: z.boolean().optional(),
+      orderedListLevels: z.array(orderedListModuleSchema).min(1).optional(),
+      unorderedListLevels: z.array(unorderedListSymbolSchema).min(1).optional(),
     })
     .optional(),
 });
