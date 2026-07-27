@@ -72,6 +72,8 @@ export async function renderDocument(
         images,
         footnoteStyle: template.manifest.footnoteStyle,
         primaryLang: fonts.primaryLang,
+        orderedListLevels: input.options?.orderedListLevels,
+        unorderedListLevels: input.options?.unorderedListLevels,
       })
     : { body: blocknoteToTypst(input.document.content, {
         headingOffset: template.manifest.headingOffset,

@@ -20,5 +20,7 @@ export type RenderInput = {
     format?: "pdf";
     pageSize?: "A4" | "Letter";
     includeMetadata?: boolean;
+    orderedListLevels?: import("../converters/list-markers").OrderedListModuleId[];
+    unorderedListLevels?: import("../converters/list-markers").UnorderedListSymbol[];
   };
 };

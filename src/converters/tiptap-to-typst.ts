@@ -7,6 +7,13 @@ import { proofLabel } from "../config/proof-labels";
 import { formatCrossRefLabel, getFigureSupplement } from "../config/cross-ref-labels";
 import { normalizeMermaidTheme, resolveMermaidThemeArgs } from "../config/mermaid-themes";
 import { getTypstFontStack } from "../config/fonts";
+import {
+  orderedLevelModule,
+  orderedListNumbering,
+  unorderedLevelSymbol,
+  type OrderedListModuleId,
+  type UnorderedListSymbol,
+} from "./list-markers";
 
 // Converts a Tiptap document (the canonical anvilnote-web source format) to
 // Typst markup. The web app stores content wrapped as a single-element array
@@ -38,12 +45,20 @@ type TiptapToTypstOptions = {
    *  cross-ref-labels.ts), for formatting crossRef display text ("圖 1" vs
    *  "Figure 1"). Independent of anything UI-locale related. */
   primaryLang?: string;
+  /** Which marker "module"/symbol each nested list depth uses (Settings >
+   *  List markers on the web app). Undefined levels fall back to
+   *  list-markers.ts's own DEFAULT_ORDERED_LIST_LEVELS/
+   *  DEFAULT_UNORDERED_LIST_LEVELS. */
+  orderedListLevels?: OrderedListModuleId[];
+  unorderedListLevels?: UnorderedListSymbol[];
 };
 
 // Collector for the current conversion (the CLI runs one conversion at a time).
 let imageSink: ImageAsset[] | null = null;
 let footnoteStyle: "footnote" | "sidenote" = "footnote";
 let primaryLang: string | undefined;
+let orderedListLevels: OrderedListModuleId[] | undefined;
+let unorderedListLevels: UnorderedListSymbol[] | undefined;
 // Set when a mermaid node is actually rendered — build-entry.ts only adds
 // the @preview/merman import when true, so a document with no mermaid
 // blocks doesn't depend on that package (and its offline cache) being
@@ -634,16 +649,6 @@ function textContent(content: unknown): string {
     .join("");
 }
 
-const ORDERED_LIST_NUMBERING = ["1.", "(1)", "①", "a.", "(a)"] as const;
-const BULLET_LIST_MARKERS = ["•", "◦", "▪", "–"] as const;
-
-function listStyleAtDepth<const T extends readonly string[]>(
-  styles: T,
-  depth: number,
-): T[number] {
-  return styles[Math.min(Math.max(depth, 0), styles.length - 1)];
-}
-
 function renderList(
   node: TiptapNode,
   offset: number,
@@ -662,25 +667,43 @@ function renderList(
         return renderBlock(child, offset, childDepth);
       })
       .filter(Boolean)
-      .join("\n");
+      // Typst only starts a new paragraph on a BLANK line — a single "\n"
+      // is just a soft line-break/space in markup content. A listItem with
+      // multiple paragraph children (e.g. a demoted markerless continuation
+      // line, see anvilnote-web's list-item-demote.ts) needs the same
+      // blank-line-between-blocks treatment renderBlocks() already uses at
+      // the top level, or they'd all run together as one paragraph.
+      .flatMap((block) => [block, ""])
+      .join("\n")
+      .trim();
 
-    return `[\n${indentLines(inner, "  ")}\n]`;
+    // Templates commonly set a document-wide paragraph first-line-indent
+    // (Chinese-style body text convention, `all: false` so only a
+    // container's FIRST paragraph is exempt — see plain-note/upstream.typ).
+    // A list item's own marker+hanging-indent already provides the visual
+    // structure a continuation paragraph needs, so its second (and later)
+    // paragraphs must not ALSO pick up that first-line-indent on top —
+    // reset it to 0 within every item's own body.
+    const innerWithIndentReset = `#set par(first-line-indent: 0pt)\n${inner}`;
+
+    return `[\n${indentLines(innerWithIndentReset, "  ")}\n]`;
   });
 
   if (ordered) {
-    const numbering = listStyleAtDepth(ORDERED_LIST_NUMBERING, depth);
+    const moduleId = orderedLevelModule(orderedListLevels, depth + 1);
+    const numbering = orderedListNumbering(moduleId);
     const rawStart = node.attrs?.start;
     const start =
       typeof rawStart === "number" && Number.isInteger(rawStart) && rawStart > 1
         ? `\n  start: ${rawStart},`
         : "";
-    return `#enum(\n  numbering: "${numbering}",${start}\n${indentLines(
+    return `#enum(\n  numbering: ${numbering},${start}\n${indentLines(
       items.join(",\n"),
       "  ",
     )},\n)`;
   }
 
-  const marker = listStyleAtDepth(BULLET_LIST_MARKERS, depth);
+  const marker = unorderedLevelSymbol(unorderedListLevels, depth + 1);
   return `#list(\n  marker: [${marker}],\n${indentLines(items.join(",\n"), "  ")},\n)`;
 }
 
@@ -1294,6 +1317,8 @@ export function tiptapToTypst(content: unknown[], opts: TiptapToTypstOptions = {
   imageSink = opts.images ?? null;
   footnoteStyle = opts.footnoteStyle ?? "footnote";
   primaryLang = opts.primaryLang;
+  orderedListLevels = opts.orderedListLevels;
+  unorderedListLevels = opts.unorderedListLevels;
   const offset = opts.headingOffset ?? 0;
   const first = Array.isArray(content) ? content[0] : undefined;
   const nodes =
@@ -1312,6 +1337,8 @@ export function tiptapToTypst(content: unknown[], opts: TiptapToTypstOptions = {
   footnoteMap = null;
   referencedTargetIds = null;
   primaryLang = undefined;
+  orderedListLevels = undefined;
+  unorderedListLevels = undefined;
   usedMermaid = false;
   usedSubpar = false;
   return { body, usesMermaid, usesSubpar };
