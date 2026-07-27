@@ -634,26 +634,54 @@ function textContent(content: unknown): string {
     .join("");
 }
 
-function renderList(node: TiptapNode, offset: number, marker: "-" | "+"): string {
-  const lines: string[] = [];
-  for (const item of asNodes(node.content)) {
-    const inlineParts: string[] = [];
-    const nestedParts: string[] = [];
-    for (const child of asNodes(item.content)) {
-      if (
-        child.type === "bulletList" ||
-        child.type === "orderedList" ||
-        child.type === "taskList"
-      ) {
-        nestedParts.push(indentLines(renderBlock(child, offset), "  "));
-      } else {
-        inlineParts.push(renderBlock(child, offset));
-      }
-    }
-    lines.push(`${marker} ${inlineParts.join(" ").trim()}`.trim());
-    lines.push(...nestedParts);
+const ORDERED_LIST_NUMBERING = ["1.", "(1)", "①", "a.", "(a)"] as const;
+const BULLET_LIST_MARKERS = ["•", "◦", "▪", "–"] as const;
+
+function listStyleAtDepth<const T extends readonly string[]>(
+  styles: T,
+  depth: number,
+): T[number] {
+  return styles[Math.min(Math.max(depth, 0), styles.length - 1)];
+}
+
+function renderList(
+  node: TiptapNode,
+  offset: number,
+  ordered: boolean,
+  depth: number,
+): string {
+  const items = asNodes(node.content).map((item) => {
+    const inner = asNodes(item.content)
+      .map((child) => {
+        const childDepth =
+          child.type === "bulletList" || child.type === "orderedList"
+            ? child.type === node.type
+              ? depth + 1
+              : 0
+            : depth;
+        return renderBlock(child, offset, childDepth);
+      })
+      .filter(Boolean)
+      .join("\n");
+
+    return `[\n${indentLines(inner, "  ")}\n]`;
+  });
+
+  if (ordered) {
+    const numbering = listStyleAtDepth(ORDERED_LIST_NUMBERING, depth);
+    const rawStart = node.attrs?.start;
+    const start =
+      typeof rawStart === "number" && Number.isInteger(rawStart) && rawStart > 1
+        ? `\n  start: ${rawStart},`
+        : "";
+    return `#enum(\n  numbering: "${numbering}",${start}\n${indentLines(
+      items.join(",\n"),
+      "  ",
+    )},\n)`;
   }
-  return lines.join("\n");
+
+  const marker = listStyleAtDepth(BULLET_LIST_MARKERS, depth);
+  return `#list(\n  marker: [${marker}],\n${indentLines(items.join(",\n"), "  ")},\n)`;
 }
 
 function renderTaskList(node: TiptapNode, offset: number): string {
@@ -952,7 +980,7 @@ function renderTable(node: TiptapNode, offset: number): string {
   return `#align(${align})[\n${indentLines(figureSrc, "  ")}\n]`;
 }
 
-function renderBlock(node: TiptapNode, offset: number): string {
+function renderBlock(node: TiptapNode, offset: number, listDepth = 0): string {
   const type = typeof node.type === "string" ? node.type : "paragraph";
 
   switch (type) {
@@ -974,12 +1002,21 @@ function renderBlock(node: TiptapNode, offset: number): string {
       // have something to jump to.
       return `${"=".repeat(level)} ${inlineToTypst(node.content)}${labelSuffix}`.trim();
     }
-    case "paragraph":
-      return inlineToTypst(node.content);
+    case "paragraph": {
+      const text = inlineToTypst(node.content);
+      const rawIndent = node.attrs?.indent;
+      const indent =
+        typeof rawIndent === "number" && Number.isFinite(rawIndent)
+          ? clamp(Math.trunc(rawIndent), 0, 8)
+          : 0;
+      return indent > 0
+        ? `#block(inset: (left: ${indent * 2}em))[${text}]`
+        : text;
+    }
     case "bulletList":
-      return renderList(node, offset, "-");
+      return renderList(node, offset, false, listDepth);
     case "orderedList":
-      return renderList(node, offset, "+");
+      return renderList(node, offset, true, listDepth);
     case "taskList":
       return renderTaskList(node, offset);
     case "blockquote": {
@@ -1166,14 +1203,20 @@ function renderBlock(node: TiptapNode, offset: number): string {
       const dashArg = dash[lineStyle] ? `, dash: "${dash[lineStyle]}"` : "";
       return `#line(length: 100%, stroke: (thickness: ${thickness}pt${dashArg}))`;
     }
+    case "pageBreak":
+      return node.attrs?.weak === true
+        ? "#pagebreak(weak: true)"
+        : "#pagebreak()";
     case "functionPlot": {
-      const svg = typeof node.attrs?.svg === "string" ? node.attrs.svg : "";
-      if (!svg.trim()) return "";
+      const pdf = typeof node.attrs?.pdf === "string" ? node.attrs.pdf : "";
+      if (!pdf.trim()) return "";
       // Reuses the exact same embedding path as a regular image node — the
-      // cached SVG was already fully rendered client-side (see
-      // anvilnote-web's function-plot-dialog.tsx); no new Typst logic needed
-      // here, matching the spec's "renderer 零新增邏輯" decision.
-      const dataUrl = `data:image/svg+xml;base64,${Buffer.from(svg, "utf8").toString("base64")}`;
+      // PDF was already fully rendered server-side by anvilnote-funcs
+      // (sympy + pgfplots/TikZ + tectonic), and Typst 0.14+ embeds PDF
+      // images natively via image(), so no new Typst logic is needed here
+      // (same "renderer 零新增邏輯" decision as the old SVG version this
+      // replaces — see prompt/spec/project-function-plot.md).
+      const dataUrl = `data:application/pdf;base64,${pdf}`;
       return renderImage({ ...node, attrs: { ...node.attrs, src: dataUrl } });
     }
     case "statsChart": {
