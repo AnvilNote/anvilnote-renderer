@@ -43,11 +43,14 @@
 // above (falls back to "note" if unrecognized). title: content shown in bold,
 // title-fonts (CJK -> 黑體/思源黑體/等 sans stack, other scripts -> Noto Sans /
 // Roboto), colored with the kind's accent; omitted entirely when `none` or "".
-// Square corners by design, matching the web editor's callout box.
-#let callout(body, kind: "note", title: none) = {
+// background: per-instance override of the kind's own preset fill (the web
+// editor's own custom-background color picker — see callout-node-view.tsx) —
+// accent/border color always still comes from kind regardless. Square
+// corners by design, matching the web editor's callout box.
+#let callout(body, kind: "note", title: none, background: none) = {
   let style = _callout-palette.at(kind, default: _callout-palette.note)
   let accent = rgb(style.accent)
-  let background = rgb(style.background)
+  let background = if background != none { rgb(background) } else { rgb(style.background) }
 
   block(
     width: 100%,

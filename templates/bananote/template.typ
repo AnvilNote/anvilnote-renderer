@@ -28,5 +28,15 @@
     version: if version == none or version == "" { none } else { version },
     banana-color: if bc == none { yellow } else { rgb(bc) },
   )
+  // @preview/bananote's own `note()` sets figure(placement: top) — an
+  // academic-paper convention (figures float to the current page's top)
+  // that's wrong for AnvilNote's charts/images, which the user inserts at
+  // a specific spot and expects to stay there (same intent as chart-node-
+  // view.tsx's own draggable={false} fix for the live editor). Overriding
+  // it here, after the show rule, wins because this set-rule sits later in
+  // the same content sequence than note()'s own (Typst set-rules shadow
+  // earlier ones for everything from that point forward) — no need to
+  // touch the vendored package itself.
+  set figure(placement: none)
   body
 }

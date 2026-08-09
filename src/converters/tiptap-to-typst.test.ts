@@ -56,6 +56,66 @@ test("functionPlot node with no cached pdf renders nothing", () => {
   assert.equal(body.trim(), "");
 });
 
+test("chart node embeds its cached base64 PNG via image()", () => {
+  // Real bug, caught via a live PDF preview: this case didn't exist at all
+  // until anvilnote-web's stats-chart -> chart rewrite (23 types, Python/
+  // plotly render service) — the renderer's switch still only matched the
+  // OLD "statsChart" node type, so a chart inserted via the new editor
+  // silently vanished from every PDF/print preview while still showing
+  // fine in the live browser editor (which renders via its own cached
+  // plotly.js JSON, a completely separate code path from this file).
+  const images: { filename: string; base64: string }[] = [];
+  const { body } = tiptapToTypst(
+    [
+      {
+        type: "doc",
+        content: [
+          {
+            type: "chart",
+            attrs: { chartType: "bar", staticImage: "data:image/png;base64,aGVsbG8=", caption: "" },
+          },
+        ],
+      },
+    ],
+    { images },
+  );
+
+  assert.equal(images.length, 1);
+  assert.equal(images[0].base64, "aGVsbG8=");
+  assert.match(images[0].filename, /\.png$/);
+  assert.match(body, /#figure\(image\("image-0\.png"\)\)/);
+});
+
+test("chart node with no cached static image renders nothing", () => {
+  const { body } = tiptapToTypst(
+    [{ type: "doc", content: [{ type: "chart", attrs: { chartType: "bar" } }] }],
+    { images: [] },
+  );
+  assert.equal(body.trim(), "");
+});
+
+test("chart node's own caption becomes the figure's caption, same as a plain image", () => {
+  const { body } = tiptapToTypst(
+    [
+      {
+        type: "doc",
+        content: [
+          {
+            type: "chart",
+            attrs: {
+              chartType: "bar",
+              staticImage: "data:image/png;base64,aGVsbG8=",
+              caption: "Example chart",
+            },
+          },
+        ],
+      },
+    ],
+    { images: [] },
+  );
+  assert.match(body, /caption: \[Example chart\]/);
+});
+
 test("paragraph indentation is preserved in Typst output", () => {
   const { body } = tiptapToTypst([
     {
@@ -71,6 +131,46 @@ test("paragraph indentation is preserved in Typst output", () => {
   ]);
 
   assert.equal(body.trim(), "#block(inset: (left: 4em))[Indented paragraph]");
+});
+
+test("centered/right-aligned paragraphs wrap in #align; explicit left does not", () => {
+  const paragraph = (textAlign: string, text: string) => ({
+    type: "paragraph",
+    attrs: { textAlign },
+    content: [{ type: "text", text }],
+  });
+
+  const { body: centered } = tiptapToTypst([
+    { type: "doc", content: [paragraph("center", "Centered")] },
+  ]);
+  assert.equal(centered.trim(), "#align(center)[Centered]");
+
+  const { body: right } = tiptapToTypst([
+    { type: "doc", content: [paragraph("right", "Right")] },
+  ]);
+  assert.equal(right.trim(), "#align(right)[Right]");
+
+  const { body: left } = tiptapToTypst([
+    { type: "doc", content: [paragraph("left", "Left")] },
+  ]);
+  assert.equal(left.trim(), "Left");
+});
+
+test("a centered AND indented paragraph nests #align outside #block", () => {
+  const { body } = tiptapToTypst([
+    {
+      type: "doc",
+      content: [
+        {
+          type: "paragraph",
+          attrs: { indent: 1, textAlign: "center" },
+          content: [{ type: "text", text: "Both" }],
+        },
+      ],
+    },
+  ]);
+
+  assert.equal(body.trim(), "#align(center)[#block(inset: (left: 2em))[Both]]");
 });
 
 test("ordered list markers follow the configured nesting hierarchy", () => {

@@ -1032,9 +1032,18 @@ function renderBlock(node: TiptapNode, offset: number, listDepth = 0): string {
         typeof rawIndent === "number" && Number.isFinite(rawIndent)
           ? clamp(Math.trunc(rawIndent), 0, 8)
           : 0;
-      return indent > 0
-        ? `#block(inset: (left: ${indent * 2}em))[${text}]`
-        : text;
+      const indented = indent > 0 ? `#block(inset: (left: ${indent * 2}em))[${text}]` : text;
+      // "left" is Typst's own paragraph default already, so it's excluded
+      // here the same way indent === 0 is above — no wrapper needed for the
+      // common case. #align wraps OUTSIDE the indent block (not the other
+      // way around) so a paragraph with both set centers/right-aligns
+      // within whatever width the indent left it — the visually sensible
+      // reading of "indented AND centered" together, however rare that
+      // combination is in practice.
+      const textAlign = node.attrs?.textAlign;
+      return textAlign === "center" || textAlign === "right"
+        ? `#align(${textAlign})[${indented}]`
+        : indented;
     }
     case "bulletList":
       return renderList(node, offset, false, listDepth);
@@ -1085,8 +1094,11 @@ function renderBlock(node: TiptapNode, offset: number, listDepth = 0): string {
       );
       const title = typeof node.attrs?.title === "string" ? node.attrs.title.trim() : "";
       const titleArg = title ? `title: [${escapeTypstText(title)}]` : "title: none";
+      const customBackground =
+        typeof node.attrs?.customBackground === "string" ? node.attrs.customBackground : null;
+      const backgroundArg = customBackground ? `, background: "${customBackground}"` : "";
       const inner = renderBlocks(asNodes(node.content), offset);
-      return `#callout(kind: "${kind}", ${titleArg})[${inner}]`;
+      return `#callout(kind: "${kind}", ${titleArg}${backgroundArg})[${inner}]`;
     }
     case "proof": {
       const inner = renderBlocks(asNodes(node.content), offset);
@@ -1242,26 +1254,17 @@ function renderBlock(node: TiptapNode, offset: number, listDepth = 0): string {
       const dataUrl = `data:application/pdf;base64,${pdf}`;
       return renderImage({ ...node, attrs: { ...node.attrs, src: dataUrl } });
     }
-    case "statsChart": {
-      const svg = typeof node.attrs?.svg === "string" ? node.attrs.svg : "";
-      if (!svg.trim()) return "";
-      // Same cached-SVG embedding path as functionPlot above — the SVG was
-      // already fully rendered client-side (see anvilnote-web's
-      // stats-chart-dialog.tsx).
-      //
-      // Real bug, caught via a live PDF export: renderImage() reads any
-      // numeric node.attrs.width as a PERCENTAGE of page width (the plain
-      // "image" node's own resize-handle convention — see its own
-      // `width: ${width}%` embed below). stats-chart's own width/height
-      // attrs mean something completely different: literal CENTIMETERS,
-      // already baked into the SVG's own intrinsic viewBox by
-      // anvilnote-charts at render time (see stats-chart-dialog.tsx's
-      // customSize()). Passing them through unchanged made a chart with
-      // width: 10.7 (meaning 10.7cm) embed as width: 10.7% of the page —
-      // a barely-visible thumbnail. Stripped here so renderImage embeds
-      // the SVG at its own already-correct natural size instead.
-      const dataUrl = `data:image/svg+xml;base64,${Buffer.from(svg, "utf8").toString("base64")}`;
-      return renderImage({ ...node, attrs: { ...node.attrs, src: dataUrl, width: undefined, height: undefined } });
+    case "chart": {
+      // The rendered-output cache (chart-dialog.tsx's onSave) is already a
+      // full `data:image/png;base64,...` data URL — same embedding path as
+      // functionPlot above, just no base64-wrapping needed here since the
+      // client already did it. Unlike the old statsChart node, `chart` has
+      // no width/height attrs of its own to strip (see that case's own
+      // now-removed comment on why those had to be stripped there) — its
+      // size comes entirely from the image's own natural dimensions.
+      const staticImage = typeof node.attrs?.staticImage === "string" ? node.attrs.staticImage : "";
+      if (!staticImage.trim()) return "";
+      return renderImage({ ...node, attrs: { ...node.attrs, src: staticImage } });
     }
     case "image":
       return renderImage(node);
