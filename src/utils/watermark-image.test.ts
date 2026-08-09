@@ -1,15 +1,23 @@
 // src/utils/watermark-image.test.ts
 import assert from "node:assert/strict";
 import test from "node:test";
-import sharp from "sharp";
+import { PNG } from "pngjs";
 import { applyWatermarkOpacity, decodeDataUrl } from "./watermark-image";
 
-async function solidPng(alpha = 1): Promise<Buffer> {
-  return sharp({
-    create: { width: 10, height: 10, channels: 4, background: { r: 10, g: 20, b: 30, alpha } },
-  })
-    .png()
-    .toBuffer();
+function solidPng(alpha255 = 255): Buffer {
+  const png = new PNG({ width: 10, height: 10 });
+  for (let i = 0; i < png.data.length; i += 4) {
+    png.data[i] = 10;
+    png.data[i + 1] = 20;
+    png.data[i + 2] = 30;
+    png.data[i + 3] = alpha255;
+  }
+  return PNG.sync.write(png);
+}
+
+function readAlpha(buffer: Buffer, pixelIndex = 0): number {
+  const png = PNG.sync.read(buffer);
+  return png.data[pixelIndex * 4 + 3];
 }
 
 test("decodeDataUrl strips the data: prefix before base64-decoding", () => {
@@ -18,36 +26,24 @@ test("decodeDataUrl strips the data: prefix before base64-decoding", () => {
   assert.deepEqual(decodeDataUrl(dataUrl), original);
 });
 
-test("applyWatermarkOpacity scales a fully-opaque image's alpha channel to match opacityPercent", async () => {
-  const input = await solidPng(1);
-  const output = await applyWatermarkOpacity(input, 40);
-  const { data, info } = await sharp(output).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
-  assert.equal(info.channels, 4);
-  const alphaSample = data[3];
-  // 40% of 255 ~= 102; sharp's background alpha -> 8bit conversion can be off
-  // by a rounding step, so assert a tolerance band instead of an exact byte.
-  assert.ok(Math.abs(alphaSample - 102) <= 2, `expected alpha ~102, got ${alphaSample}`);
+test("applyWatermarkOpacity scales a fully-opaque image's alpha channel to match opacityPercent", () => {
+  const input = solidPng(255);
+  const output = applyWatermarkOpacity(input, 40);
+  // 40% of 255 = 102 (rounded).
+  assert.equal(readAlpha(output), 102);
 });
 
-test("applyWatermarkOpacity multiplies (not overwrites) an already-transparent image's alpha", async () => {
-  // Half-transparent source (alpha 0.5) at 50% requested opacity should end
-  // up around 25% (0.5 * 0.5), confirming dest-in multiplies rather than
-  // clobbers the source's own per-pixel alpha.
-  const input = await solidPng(0.5);
-  const output = await applyWatermarkOpacity(input, 50);
-  const { data } = await sharp(output).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
-  const alphaSample = data[3];
-  const expected = 0.25 * 255;
-  assert.ok(Math.abs(alphaSample - expected) <= 4, `expected alpha ~${expected}, got ${alphaSample}`);
+test("applyWatermarkOpacity multiplies (not overwrites) an already-transparent image's alpha", () => {
+  // Half-transparent source (alpha 128/255) at 50% requested opacity should
+  // end up around a quarter, confirming it multiplies rather than clobbers
+  // the source's own per-pixel alpha.
+  const input = solidPng(128);
+  const output = applyWatermarkOpacity(input, 50);
+  assert.equal(readAlpha(output), 64);
 });
 
-test("applyWatermarkOpacity clamps out-of-range percentages", async () => {
-  const input = await solidPng(1);
-  const over = await applyWatermarkOpacity(input, 150);
-  const { data: overData } = await sharp(over).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
-  assert.ok(overData[3] >= 253);
-
-  const under = await applyWatermarkOpacity(input, -10);
-  const { data: underData } = await sharp(under).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
-  assert.equal(underData[3], 0);
+test("applyWatermarkOpacity clamps out-of-range percentages", () => {
+  const input = solidPng(255);
+  assert.equal(readAlpha(applyWatermarkOpacity(input, 150)), 255);
+  assert.equal(readAlpha(applyWatermarkOpacity(input, -10)), 0);
 });

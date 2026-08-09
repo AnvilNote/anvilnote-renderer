@@ -19,13 +19,14 @@
   },
   "dependencies": {
     "dotenv": "^17.4.2",
-    "sharp": "^0.35.3",
+    "pngjs": "^7.0.0",
     "tex2typst": "^0.6.2",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/node": "^26.0.1",
+    "@types/pngjs": "^6.0.5",
     "@typescript-eslint/eslint-plugin": "^8.62.0",
     "@typescript-eslint/parser": "^8.62.0",
     "esbuild": "^0.28.1",
