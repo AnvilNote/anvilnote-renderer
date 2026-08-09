@@ -324,3 +324,157 @@ test("weak pageBreak renders a weak Typst page break", () => {
 
   assert.equal(body.trim(), "#pagebreak(weak: true)");
 });
+
+test("a blockquote with no custom color renders a bare #quote, no border block", () => {
+  const { body } = tiptapToTypst([
+    {
+      type: "doc",
+      content: [
+        {
+          type: "blockquote",
+          content: [{ type: "paragraph", content: [{ type: "text", text: "Quoted" }] }],
+        },
+      ],
+    },
+  ]);
+
+  assert.match(body, /^#quote\(block: true\)\[.*Quoted.*\]$/m);
+  assert.doesNotMatch(body, /#block\(stroke:/);
+});
+
+test("a blockquote with a custom color wraps #quote in a colored left-border #block", () => {
+  const { body } = tiptapToTypst([
+    {
+      type: "doc",
+      content: [
+        {
+          type: "blockquote",
+          attrs: { color: "#3b82f6" },
+          content: [{ type: "paragraph", content: [{ type: "text", text: "Quoted" }] }],
+        },
+      ],
+    },
+  ]);
+
+  assert.match(
+    body,
+    /^#block\(stroke: \(left: 3pt \+ rgb\("#3b82f6"\)\), inset: \(left: 1em, top: 0\.3em, bottom: 0\.3em\)\)\[#quote\(block: true\)\[.*Quoted.*\]\]$/m,
+  );
+});
+
+test("a preset-kind callout passes neither accent: nor background: (unless customBackground is set)", () => {
+  const { body } = tiptapToTypst([
+    {
+      type: "doc",
+      content: [
+        {
+          type: "callout",
+          attrs: { kind: "warning", title: "Heads up" },
+          content: [{ type: "paragraph", content: [{ type: "text", text: "Careful" }] }],
+        },
+      ],
+    },
+  ]);
+
+  assert.match(body, /^#callout\(kind: "warning", title: \[Heads up\]\)\[.*Careful.*\]$/m);
+});
+
+test("a custom-kind callout passes both accent: and a computed background:", () => {
+  const { body } = tiptapToTypst([
+    {
+      type: "doc",
+      content: [
+        {
+          type: "callout",
+          attrs: { kind: "custom", customAccent: "#3b82f6", title: "Note" },
+          content: [{ type: "paragraph", content: [{ type: "text", text: "Custom" }] }],
+        },
+      ],
+    },
+  ]);
+
+  assert.match(body, /kind: "custom"/);
+  assert.match(body, /background: "#[0-9a-fA-F]{6}"/);
+  assert.match(body, /accent: "#3b82f6"/);
+});
+
+test("a custom-kind callout's own customBackground still overrides the computed one", () => {
+  const { body } = tiptapToTypst([
+    {
+      type: "doc",
+      content: [
+        {
+          type: "callout",
+          attrs: {
+            kind: "custom",
+            customAccent: "#3b82f6",
+            customBackground: "#fefefe",
+            title: "Note",
+          },
+          content: [{ type: "paragraph", content: [{ type: "text", text: "Custom" }] }],
+        },
+      ],
+    },
+  ]);
+
+  assert.match(body, /background: "#fefefe"/);
+  assert.match(body, /accent: "#3b82f6"/);
+});
+
+test("a custom-kind callout with a dark background gets an explicit content-color, no title-color (accent still legible)", () => {
+  const { body } = tiptapToTypst([
+    {
+      type: "doc",
+      content: [
+        {
+          type: "callout",
+          // A saturated, moderately dark blue accent -- its own computed
+          // background (S 50% L 92%) is still light regardless (the
+          // formula's own fixed lightness, not derived from the accent's),
+          // so force a dark background via customBackground instead, same
+          // shape as the real reported bug.
+          attrs: { kind: "custom", customAccent: "#3b82f6", customBackground: "#191e2e" },
+          content: [{ type: "paragraph", content: [{ type: "text", text: "Custom" }] }],
+        },
+      ],
+    },
+  ]);
+
+  assert.match(body, /content-color: "#FFFFFF"/);
+  assert.doesNotMatch(body, /title-color:/);
+});
+
+test("a near-identical custom accent/background pairing gets both title-color and content-color", () => {
+  const { body } = tiptapToTypst([
+    {
+      type: "doc",
+      content: [
+        {
+          type: "callout",
+          attrs: { kind: "custom", customAccent: "#1a1e2c", customBackground: "#191e2e" },
+          content: [{ type: "paragraph", content: [{ type: "text", text: "Custom" }] }],
+        },
+      ],
+    },
+  ]);
+
+  assert.match(body, /title-color: "#FFFFFF"/);
+  assert.match(body, /content-color: "#FFFFFF"/);
+});
+
+test("a preset kind with a dark customBackground override also gets a content-color fix", () => {
+  const { body } = tiptapToTypst([
+    {
+      type: "doc",
+      content: [
+        {
+          type: "callout",
+          attrs: { kind: "note", customBackground: "#191e2e" },
+          content: [{ type: "paragraph", content: [{ type: "text", text: "Dark note" }] }],
+        },
+      ],
+    },
+  ]);
+
+  assert.match(body, /content-color: "#FFFFFF"/);
+});

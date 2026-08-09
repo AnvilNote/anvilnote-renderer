@@ -371,6 +371,9 @@
   margin-bottom: none,
   margin-left: none,
   margin-right: none,
+  // Same "none = leave untouched" convention as the margin params above --
+  // `cfg.page-paper` (built-in default "a4") applies when not overridden.
+  page-paper: none,
   config: (:),
   body,
 ) = {
@@ -379,6 +382,7 @@
   if margin-bottom != none { cfg.margin-bottom = margin-bottom }
   if margin-left != none { cfg.margin-left = margin-left }
   if margin-right != none { cfg.margin-right = margin-right }
+  if page-paper != none { cfg.page-paper = page-paper }
   let show-outline = toc
 
   set page(

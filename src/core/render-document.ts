@@ -14,14 +14,60 @@ import { ensureMathLoaded } from "../converters/latex-to-typst";
 import { loadTemplate } from "./template-loader";
 import { ensureDir, pathExists } from "../utils/fs";
 import { compileTypst } from "./compile-typst";
-import { buildTypstEntry } from "./build-entry";
+import { buildTypstEntry, type ResolvedWatermark } from "./build-entry";
 import { shouldIgnoreSystemFonts } from "./font-paths";
 import { resolveFromRendererRoot } from "../utils/path";
 import { FONT_PRESET_VERSION, FONT_BUNDLE, resolveFontChoices } from "../config/fonts";
+import { applyWatermarkOpacity, decodeDataUrl } from "../utils/watermark-image";
 import type { LoadedTemplate } from "../types/template";
+import type { WatermarkOptions } from "../types/render-input";
 
-function pagePreset(pageSize?: "A4" | "Letter") {
-  return pageSize === "Letter" ? "us-letter" : "a4";
+const WATERMARK_IMAGE_FILENAME = "watermark-image.png";
+
+// image: null means "use AnvilNote's own default icon" (see WatermarkOptions'
+// doc comment) rather than "no image" -- watermark.enabled + type: "image"
+// already guarantees SOME image is wanted by the time this runs.
+async function resolveWatermarkImage(wm: WatermarkOptions): Promise<Buffer> {
+  const raw = wm.image
+    ? decodeDataUrl(wm.image)
+    : await fs.readFile(resolveFromRendererRoot("assets", "watermark-default.png"));
+  return applyWatermarkOpacity(raw, wm.opacityPercent);
+}
+
+async function resolveWatermark(
+  wm: WatermarkOptions | undefined,
+  buildDir: string,
+): Promise<ResolvedWatermark | undefined> {
+  if (!wm?.enabled) return undefined;
+  if (wm.type === "image") {
+    const faded = await resolveWatermarkImage(wm);
+    await fs.writeFile(path.join(buildDir, WATERMARK_IMAGE_FILENAME), faded);
+    return {
+      type: "image",
+      imageFilename: WATERMARK_IMAGE_FILENAME,
+      rotationDeg: wm.rotationDeg,
+      opacityPercent: wm.opacityPercent,
+      applyToFirstPage: wm.applyToFirstPage,
+      fontFamily: wm.fontFamily,
+      sizePercent: wm.sizePercent,
+    };
+  }
+  return {
+    type: "text",
+    text: wm.text || "AnvilNote",
+    rotationDeg: wm.rotationDeg,
+    opacityPercent: wm.opacityPercent,
+    applyToFirstPage: wm.applyToFirstPage,
+    fontFamily: wm.fontFamily,
+    sizePercent: wm.sizePercent,
+  };
+}
+
+function pagePreset(pageSize?: "A4" | "B4" | "B5" | "Letter") {
+  if (pageSize === "Letter") return "us-letter";
+  if (pageSize === "B4") return "iso-b4";
+  if (pageSize === "B5") return "iso-b5";
+  return "a4";
 }
 
 // `template.dir` is the bundled template tree — read-only once packaged (e.g.
@@ -155,6 +201,8 @@ export async function renderDocument(
   );
   await fs.copyFile(sharedOverridesSrc, path.join(buildDir, "anvil-overrides.typ"));
 
+  const watermark = await resolveWatermark(input.options?.watermark, buildDir);
+
   const entrySource = buildTypstEntry({
     adapterRelPath,
     sharedFontsRelPath: "./anvil-fonts.typ",
@@ -178,6 +226,7 @@ export async function renderDocument(
     marginBottomCm: template.manifest.supportsCustomMargins ? input.marginBottomCm : undefined,
     marginLeftCm: template.manifest.supportsCustomMargins ? input.marginLeftCm : undefined,
     marginRightCm: template.manifest.supportsCustomMargins ? input.marginRightCm : undefined,
+    watermark,
   });
 
   await fs.writeFile(entryPath, entrySource, "utf8");

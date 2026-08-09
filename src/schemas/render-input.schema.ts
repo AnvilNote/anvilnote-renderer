@@ -44,10 +44,23 @@ export const renderInputSchema = z.object({
   options: z
     .object({
       format: z.literal("pdf").default("pdf"),
-      pageSize: z.enum(["A4", "Letter"]).optional(),
+      pageSize: z.enum(["A4", "B4", "B5", "Letter"]).optional(),
       includeMetadata: z.boolean().optional(),
       orderedListLevels: z.array(orderedListModuleSchema).min(1).optional(),
       unorderedListLevels: z.array(unorderedListSymbolSchema).min(1).optional(),
+      watermark: z
+        .object({
+          enabled: z.boolean(),
+          type: z.enum(["image", "text"]),
+          image: z.string().nullable(),
+          text: z.string(),
+          rotationDeg: z.number(),
+          opacityPercent: z.number().min(0).max(100),
+          applyToFirstPage: z.boolean(),
+          fontFamily: z.enum(["serif", "sans", "rounded"]).default("sans"),
+          sizePercent: z.number().min(10).max(400).default(100),
+        })
+        .optional(),
     })
     .optional(),
 });

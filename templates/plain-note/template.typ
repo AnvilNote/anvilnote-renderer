@@ -13,6 +13,7 @@
   margin-bottom: none,
   margin-left: none,
   margin-right: none,
+  page-paper: none,
   body,
 ) = {
   let colorlinks = options.at("colorlinks", default: true)
@@ -39,6 +40,7 @@
     margin-bottom: margin-bottom,
     margin-left: margin-left,
     margin-right: margin-right,
+    page-paper: page-paper,
     // upstream's toc-color is independent of hypersetup's colorlinks (it
     // paints the TOC via a local `set text` before the link is drawn, so
     // colorlinks: false alone doesn't reach it) — wire it here so turning

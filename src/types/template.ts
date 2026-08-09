@@ -48,6 +48,9 @@ export type TemplateManifest = {
   supportsNumberedHeadings: boolean;
   /** Whether this template's adapter chain accepts margin-top/bottom/left/right args. */
   supportsCustomMargins: boolean;
+  /** Whether this template actually honors the page-size override -- see
+   *  template-loader.ts's own schema comment for why this isn't universal. */
+  supportsPageSize: boolean;
   /** Whether numbered-headings/margin overrides route through the shared
    *  apply-anvil-overrides show rule instead of native anvil-template()
    *  args — see template-loader.ts's own schema comment. */

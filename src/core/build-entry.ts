@@ -1,7 +1,33 @@
-import { escapeTypstString } from "../utils/escape-typst";
+import { escapeTypstString, escapeTypstText } from "../utils/escape-typst";
 import type { FontChoices } from "../config/fonts";
+import type { WatermarkFontFamily } from "../types/render-input";
 
 export type { FontChoices };
+
+// Resolved by render-document.ts before this module ever sees it -- image
+// vs. text is already decided, the image (if any) has already been written
+// into buildDir with its opacity pre-baked into the PNG's own alpha channel
+// (see utils/watermark-image.ts; Typst's image() has no opacity parameter),
+// and a null/default image has already been swapped for the bundled
+// AnvilNote icon. This module's only job is emitting the Typst placement.
+export type ResolvedWatermark = {
+  type: "image" | "text";
+  /** Filename inside buildDir, e.g. "watermark-image.png". Only for type: "image". */
+  imageFilename?: string;
+  /** Only for type: "text". */
+  text?: string;
+  rotationDeg: number;
+  /** Only used for type: "text" (as a fill alpha) -- image opacity is already baked in. */
+  opacityPercent: number;
+  applyToFirstPage: boolean;
+  fontFamily: WatermarkFontFamily;
+  /** Applies to both types -- percent of the baseline size (image: 12cm
+   *  width, text: 64pt), 100 = baseline. */
+  sizePercent?: number;
+};
+
+const WATERMARK_IMAGE_BASE_WIDTH_CM = 12;
+const WATERMARK_TEXT_BASE_SIZE_PT = 64;
 
 export type FieldValue = string | boolean | null | undefined;
 
@@ -95,6 +121,8 @@ export type BuildTypstEntryInput = {
   marginBottomCm?: number;
   marginLeftCm?: number;
   marginRightCm?: number;
+  /** Absent/undefined when the watermark is disabled -- emits no Typst code at all. */
+  watermark?: ResolvedWatermark;
 };
 
 // Code-block styling shared by every template: Typst's native `raw`
@@ -144,6 +172,66 @@ const QUOTE_STYLE = [
   `}`,
 ].join("\n");
 
+// Identifiers imported from anvil-fonts.typ for the watermark's independent
+// text-face choice (a user setting, unrelated to the document's own
+// primary-lang-driven title/body stacks).
+const WATERMARK_FONT_IDENT: Record<WatermarkFontFamily, string> = {
+  serif: "body-fonts",
+  sans: "title-fonts",
+  rounded: "watermark-rounded-fonts",
+};
+
+// `#set page(background: ...)` repeats on every page (Typst lays the
+// background content out fresh per page), which is exactly the "tiled
+// across the whole export" behavior a watermark needs without looping
+// per-page manually. The `context` block reads the CURRENT page number at
+// layout time so applyToFirstPage can skip page 1 without needing a second
+// document pass. Declared right before `body` (same spot as QUOTE_STYLE
+// above) so it nests inside both the template's own page setup and
+// apply-anvil-fonts, per this file's "declared later -> nests deeper ->
+// wins" rule.
+function buildWatermarkStyle(w: ResolvedWatermark): string {
+  const alpha255 = Math.round((Math.max(0, Math.min(100, w.opacityPercent)) / 100) * 255);
+  const guard = w.applyToFirstPage ? `true` : `counter(page).get().first() != 1`;
+  const scale = Math.max(0, (w.sizePercent ?? 100) / 100);
+
+  if (w.type === "image") {
+    const widthCm = Math.round(WATERMARK_IMAGE_BASE_WIDTH_CM * scale * 100) / 100;
+    return [
+      `#set page(background: context {`,
+      `  if ${guard} {`,
+      `    place(`,
+      `      center + horizon,`,
+      `      rotate(${w.rotationDeg}deg, image("${escapeTypstString(w.imageFilename ?? "")}", width: ${widthCm}cm)),`,
+      `    )`,
+      `  }`,
+      `})`,
+    ].join("\n");
+  }
+
+  // `page(background: ...)` lays its content out against the full page frame
+  // rather than an auto-sizing flow region, so `box(width: auto, text(...))`
+  // -- which reliably prevents wrap in ordinary document flow -- still wraps
+  // (and hyphen-breaks mid-word) here once the text hits the page edge.
+  // Confirmed via a real compile: only explicitly `measure()`-ing the text's
+  // own intrinsic width first and sizing the box to that exact value keeps
+  // it on one line, since the box can no longer fall back to auto-sizing
+  // against the surrounding (finite) region.
+  const textSizePt = Math.round(WATERMARK_TEXT_BASE_SIZE_PT * scale * 100) / 100;
+  return [
+    `#set page(background: context {`,
+    `  if ${guard} {`,
+    `    let watermark-text = text(font: ${WATERMARK_FONT_IDENT[w.fontFamily]}, size: ${textSizePt}pt, fill: rgb(0, 0, 0, ${alpha255}))[${escapeTypstText(w.text ?? "")}]`,
+    `    let watermark-size = measure(watermark-text)`,
+    `    place(`,
+    `      center + horizon,`,
+    `      rotate(${w.rotationDeg}deg, box(width: watermark-size.width, watermark-text)),`,
+    `    )`,
+    `  }`,
+    `})`,
+  ].join("\n");
+}
+
 /**
  * Build the Typst entry file. The renderer recognizes one contract for every
  * template — `anvil-template(meta, options, body)` — and lets each adapter
@@ -158,7 +246,7 @@ export function buildTypstEntry(input: BuildTypstEntryInput): string {
     input.footnoteStyle === "sidenote" ? "anvil-template, sidenote" : "anvil-template";
 
   const lines = [
-    `#import "${input.sharedFontsRelPath}": ${usesAnvilFontWrapper ? "apply-anvil-fonts, " : ""}anvil-font-stacks`,
+    `#import "${input.sharedFontsRelPath}": ${usesAnvilFontWrapper ? "apply-anvil-fonts, " : ""}anvil-font-stacks${input.watermark ? ", body-fonts, title-fonts, watermark-rounded-fonts" : ""}`,
     `#import "${input.sharedCalloutsRelPath}": callout, proof`,
     `#import "${input.sharedQuestionsRelPath}": question-item, choices, answer-lines, answer-blank, answer-choice-image, question-blank, inline-blank`,
     ...(usesSharedOverrides ? [`#import "${input.sharedOverridesRelPath}": apply-anvil-overrides`] : []),
@@ -170,6 +258,24 @@ export function buildTypstEntry(input: BuildTypstEntryInput): string {
 
   if (input.pagePreset) {
     lines.push(`#set page(paper: "${input.pagePreset}")`, ``);
+  }
+
+  // Emitted here -- BEFORE `#show: anvil-template.with(...)` -- rather than
+  // down by QUOTE_STYLE with the other universal style constants. Templates
+  // that generate their own cover/TOC page (e.g. plain-note) do so from
+  // WITHIN that show rule's call, using the `body` show-rule chains into as
+  // their own function's `body` parameter; anything textually placed AFTER
+  // that call only takes effect once the template's function reaches the
+  // point where it re-inserts `body`, which for a cover-page template is
+  // already page 2+. Confirmed via a real compile: with this rule placed
+  // where QUOTE_STYLE lives, `applyToFirstPage: true` still produced no
+  // watermark on plain-note's page 1. `context` defers evaluation to actual
+  // per-page layout time regardless of where the `set` rule is declared, so
+  // moving it this early doesn't change the applyToFirstPage skip logic --
+  // it just makes the style active for every page from the start, including
+  // ones a template generates before ever reaching the shared `body`.
+  if (input.watermark) {
+    lines.push(buildWatermarkStyle(input.watermark), ``);
   }
 
   // Resolve every role stack once from the user's scalar choices. The same dict
@@ -212,6 +318,17 @@ export function buildTypstEntry(input: BuildTypstEntryInput): string {
       : []),
     ...(!usesSharedOverrides && input.marginRightCm !== undefined
       ? [`  margin-right: ${input.marginRightCm}cm,`]
+      : []),
+    // plain-note (the only !usesSharedOverrides template) hardcodes its own
+    // page-paper default and, unlike margin/numbered-headings, actually
+    // calls `set page(paper: ...)` itself -- confirmed via a real compile
+    // that the top-level `#set page(paper: input.pagePreset)` above gets
+    // silently overridden by that internal call. Threading it as a native
+    // param here (same mechanism as margin-top etc.) lets plain-note apply
+    // it BEFORE generating its own title/TOC pages, so the whole document
+    // (not just `body`) gets the requested paper size.
+    ...(!usesSharedOverrides && input.pagePreset
+      ? [`  page-paper: "${input.pagePreset}",`]
       : []),
     `)`,
     ``,

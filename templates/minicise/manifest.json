@@ -123,6 +123,7 @@
   "usesAnvilFontWrapper": true,
   "supportsNumberedHeadings": true,
   "supportsCustomMargins": false,
+  "supportsPageSize": true,
   "usesSharedOverrides": true,
   "fontPolicy": "anvil-controlled"
 }

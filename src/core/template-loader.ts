@@ -49,6 +49,20 @@ const templateManifestSchema = z.object({
   // Same "Typst rejects an unrecognized named argument" reasoning as
   // supportsNumberedHeadings above, for margin-top/bottom/left/right.
   supportsCustomMargins: z.boolean().default(false),
+  // Whether this template actually honors build-entry.ts's top-level
+  // `#set page(paper: ...)` (emitted before `#show: anvil-template.with(...)`,
+  // unconditionally, for every template -- no named-argument threading
+  // needed, so no compile-error risk like the two flags above). Several
+  // wrapped @preview packages call their OWN `set page(paper: ...)`
+  // internally with a hardcoded default, which — per Typst's cascade —
+  // silently wins over that earlier top-level override. Confirmed false
+  // for 11 of the 18 templates via a real compile with pageSize: "Letter"
+  // (still produced an A4 PDF); plain-note was one of them until its own
+  // adapter chain was given a native `page-paper` param (see template.typ /
+  // upstream.typ) specifically to fix this. This flag gates whether the
+  // web UI's page-size control shows at all for a given template, so it
+  // never offers a choice that would silently do nothing.
+  supportsPageSize: z.boolean().default(false),
   // Whether numbered-headings/margin overrides are applied via the shared
   // templates/shared/anvil-overrides.typ helper (a generic show-rule nested
   // right after this template's own `#show: anvil-template.with(...)` in

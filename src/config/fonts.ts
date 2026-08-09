@@ -249,4 +249,5 @@ export const REQUIRED_FONT_FAMILIES: string[] = [
   "Garamond-Math",
   "Playfair Display",
   "Tai Heritage Pro",
+  "Baloo 2",
 ];

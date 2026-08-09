@@ -2,7 +2,15 @@ import { latexToTypstMath } from "./latex-to-typst";
 import { choiceColumns, type ChoiceEntry } from "./choice-columns";
 import { createTypstRawBlock } from "./code-block";
 import { escapeTypstString, escapeTypstText, sanitizeTypstLabel } from "../utils/escape-typst";
-import { normalizeCalloutKind } from "../config/callouts";
+import {
+  CALLOUT_KINDS,
+  CUSTOM_CALLOUT_KIND,
+  accentOrReadableTextColor,
+  computeCustomBackground,
+  isBackgroundDark,
+  normalizeCalloutKind,
+  readableTextColor,
+} from "../config/callouts";
 import { proofLabel } from "../config/proof-labels";
 import { formatCrossRefLabel, getFigureSupplement } from "../config/cross-ref-labels";
 import { normalizeMermaidTheme, resolveMermaidThemeArgs } from "../config/mermaid-themes";
@@ -1086,7 +1094,24 @@ function renderBlock(node: TiptapNode, offset: number, listDepth = 0): string {
       // used — the quoted passage itself no longer gets a "" wrapper, per
       // explicit feedback reversing an earlier decision.
       const attributionArg = attribution ? `, attribution: [${attribution}]` : "";
-      return `#quote(block: true${attributionArg})[${inner}]`;
+      const quoteCall = `#quote(block: true${attributionArg})[${inner}]`;
+
+      // Web editor's own default border-left is pure CSS (var(--border)
+      // gray) with no equivalent in the PDF at all -- QUOTE_STYLE's show
+      // rule (build-entry.ts) renders quote.where(block: true) as bare
+      // text + right-aligned attribution, no bar. Only wrap in a colored
+      // block when a custom color is actually set, matching the web side's
+      // own "unset = no visual accent beyond default" behavior rather than
+      // giving every blockquote a border it never had in the PDF before.
+      const color = typeof node.attrs?.color === "string" ? node.attrs.color : null;
+      // top/bottom inset (not just left) so the colored bar extends a
+      // little past the text's own line height at both ends instead of
+      // exactly matching it -- a bar that starts and ends flush with the
+      // first/last line of text read as clipped/too short, per explicit
+      // feedback.
+      return color
+        ? `#block(stroke: (left: 3pt + rgb("${color}")), inset: (left: 1em, top: 0.3em, bottom: 0.3em))[${quoteCall}]`
+        : quoteCall;
     }
     case "callout": {
       const kind = normalizeCalloutKind(
@@ -1096,9 +1121,51 @@ function renderBlock(node: TiptapNode, offset: number, listDepth = 0): string {
       const titleArg = title ? `title: [${escapeTypstText(title)}]` : "title: none";
       const customBackground =
         typeof node.attrs?.customBackground === "string" ? node.attrs.customBackground : null;
-      const backgroundArg = customBackground ? `, background: "${customBackground}"` : "";
+      const customAccent =
+        typeof node.attrs?.customAccent === "string" ? node.attrs.customAccent : null;
+      // kind === "custom" has no entry in anvil-callout.typ's own
+      // _callout-palette dict (it falls back to "note" there), so both
+      // accent and background are ALWAYS passed explicitly in that case --
+      // computed here exactly like the web editor's own CalloutNodeView
+      // computes them for its live preview (config/callouts.ts's
+      // computeCustomBackground; customAccent itself IS the accent, no
+      // computation needed there). customBackground still layers on top as
+      // a further per-instance override for every kind, custom included,
+      // same as it already did before this feature.
+      const resolvedAccent =
+        kind === CUSTOM_CALLOUT_KIND ? (customAccent ?? CALLOUT_KINDS[0].accent) : null;
+      const accentArg = resolvedAccent ? `, accent: "${resolvedAccent}"` : "";
+      const resolvedBackground =
+        customBackground ??
+        (kind === CUSTOM_CALLOUT_KIND && resolvedAccent
+          ? computeCustomBackground(resolvedAccent)
+          : null);
+      const backgroundArg = resolvedBackground ? `, background: "${resolvedBackground}"` : "";
+
+      // Text-color contrast fix mirrors anvilnote-web's CalloutNodeView
+      // exactly (same functions, same thresholds — see config/callouts.ts's
+      // own comments): the PDF needs the SAME "did this particular accent/
+      // background pairing turn out unreadable" check the live web preview
+      // already does, or a callout that reads fine on screen (web-side fix
+      // applied) can still export as invisible text on a dark background in
+      // the PDF (the exact gap a real report caught — this shipped after
+      // the web-only fix, once that turned out to not be enough on its
+      // own). Needs the FULLY resolved accent/background (preset lookup for
+      // the 12 fixed kinds, computed values for "custom"), not just the
+      // override args above — a preset kind's own fixed accent/background
+      // can still need this, e.g. a dark customBackground applied on top of
+      // "note".
+      const finalAccent = resolvedAccent ?? (CALLOUT_KINDS.find((k) => k.id === kind) ?? CALLOUT_KINDS[0]).accent;
+      const finalBackground =
+        resolvedBackground ?? (CALLOUT_KINDS.find((k) => k.id === kind) ?? CALLOUT_KINDS[0]).background;
+      const titleColor = accentOrReadableTextColor(finalAccent, finalBackground);
+      const titleColorArg = titleColor !== finalAccent ? `, title-color: "${titleColor}"` : "";
+      const contentColorArg = isBackgroundDark(finalBackground)
+        ? `, content-color: "${readableTextColor(finalBackground)}"`
+        : "";
+
       const inner = renderBlocks(asNodes(node.content), offset);
-      return `#callout(kind: "${kind}", ${titleArg}${backgroundArg})[${inner}]`;
+      return `#callout(kind: "${kind}", ${titleArg}${backgroundArg}${accentArg}${titleColorArg}${contentColorArg})[${inner}]`;
     }
     case "proof": {
       const inner = renderBlocks(asNodes(node.content), offset);

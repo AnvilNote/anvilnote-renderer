@@ -44,13 +44,32 @@
 // title-fonts (CJK -> 黑體/思源黑體/等 sans stack, other scripts -> Noto Sans /
 // Roboto), colored with the kind's accent; omitted entirely when `none` or "".
 // background: per-instance override of the kind's own preset fill (the web
-// editor's own custom-background color picker — see callout-node-view.tsx) —
-// accent/border color always still comes from kind regardless. Square
-// corners by design, matching the web editor's callout box.
-#let callout(body, kind: "note", title: none, background: none) = {
+// editor's own custom-background color picker — see callout-node-view.tsx).
+// accent: only ever passed for kind: "custom" (no entry in
+// _callout-palette above, so the at()-lookup below would otherwise silently
+// fall back to note's blue) — every other kind still gets its accent from
+// the palette regardless.
+// title-color/content-color: contrast-fix overrides computed in
+// tiptap-to-typst.ts (same functions/thresholds as anvilnote-web's
+// CalloutNodeView — see config/callouts.ts's own comments), for when a
+// custom accent/background pairing is bad enough that title/body text would
+// otherwise be unreadable. Both none (the overwhelming common case, every
+// one of the 12 presets included) leaves this exactly as it was: title in
+// the plain accent, body in the document's own default text color.
+// Square corners by design, matching the web editor's callout box.
+#let callout(
+  body,
+  kind: "note",
+  title: none,
+  background: none,
+  accent: none,
+  title-color: none,
+  content-color: none,
+) = {
   let style = _callout-palette.at(kind, default: _callout-palette.note)
-  let accent = rgb(style.accent)
+  let accent = if accent != none { rgb(accent) } else { rgb(style.accent) }
   let background = if background != none { rgb(background) } else { rgb(style.background) }
+  let title-fill = if title-color != none { rgb(title-color) } else { accent }
 
   block(
     width: 100%,
@@ -58,8 +77,8 @@
     stroke: (left: 2pt + accent),
     inset: (left: 12pt, right: 12pt, top: 6pt, bottom: 10pt),
     breakable: true,
-    above: 1em,
-    below: 1em,
+    above: 1.8em,
+    below: 1.8em,
   )[
     #if title != none and title != [] {
       // sticky: false — Typst's block() defaults sticky to true, which
@@ -75,12 +94,17 @@
       // side-by-side Typst compile: identical setup, only this sticky
       // value changed, same empty-background-then-content-on-next-page
       // reproduced with sticky left at its default and gone once false.
-      block(below: 0.5em, sticky: false)[
-        #set text(font: title-fonts, weight: "bold", fill: accent)
+      block(below: 0.9em, sticky: false)[
+        #set text(font: title-fonts, weight: "bold", fill: title-fill)
         #title
       ]
     }
-    #body
+    #if content-color != none {
+      set text(fill: rgb(content-color))
+      body
+    } else {
+      body
+    }
   ]
 }
 

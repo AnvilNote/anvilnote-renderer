@@ -47,6 +47,19 @@
   "Noto Sans Thai",
 )
 
+// Watermark text's "rounded" face option only (not used for document body
+// chrome). Baloo 2 has no CJK coverage, so it falls through to the same CJK
+// sans faces as title-fonts/heading-fonts above for non-Latin glyphs.
+#let watermark-rounded-fonts = (
+  "Baloo 2",
+  "TaiwanPearl",
+  "思源黑體 TW",
+  "Noto Sans",
+  "Noto Sans JP",
+  "Noto Sans KR",
+  "Noto Sans Thai",
+)
+
 #let code-fonts = (
   "JetBrains Mono",
   "Noto Sans Mono",

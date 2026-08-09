@@ -317,6 +317,15 @@
       "path": "fonts/SourceSansPro-*.otf"
     },
     {
+      "key": "baloo-2",
+      "label": "Baloo 2",
+      "family": "Baloo 2",
+      "category": "watermark-rounded",
+      "license": "OFL-1.1",
+      "source": "Google Fonts",
+      "path": "fonts/latin/baloo-2"
+    },
+    {
       "key": "cmu-typewriter-text",
       "label": "CMU Typewriter Text",
       "family": "CMU Typewriter Text",

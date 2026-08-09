@@ -174,6 +174,18 @@ const AUTO: AutoEntry[] = [
     ],
   },
   {
+    // Watermark text's "rounded" face option. No italic style exists for
+    // this family. Fontsource serves a static instance even though upstream
+    // Google Fonts only ships it as a variable font (Typst 0.14 can't read
+    // variable fonts — see the file-level note above).
+    key: "baloo-2",
+    dir: "latin/baloo-2",
+    files: [
+      { url: `https://cdn.jsdelivr.net/fontsource/fonts/baloo-2@latest/latin-400-normal.ttf`, name: "Baloo2-Regular.ttf" },
+      { url: `https://cdn.jsdelivr.net/fontsource/fonts/baloo-2@latest/latin-700-normal.ttf`, name: "Baloo2-Bold.ttf" },
+    ],
+  },
+  {
     key: "tex-gyre-pagella",
     dir: "math/tex-gyre-pagella",
     files: [
